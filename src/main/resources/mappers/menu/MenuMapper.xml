@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.commonsystem.menu.MenuMapper">
+
+  <resultMap id="MenuMap" type="com.example.commonsystem.menu.Menu">
+    <constructor>
+      <idArg column="menu_id"    javaType="_long"/>
+      <arg   column="parent_id"  javaType="java.lang.Long"/>
+      <arg   column="name"       javaType="java.lang.String"/>
+      <arg   column="path"       javaType="java.lang.String"/>
+      <arg   column="icon"       javaType="java.lang.String"/>
+      <arg   column="sort_order" javaType="_int"/>
+      <arg   column="use_yn"     javaType="_boolean"/>
+      <arg   column="menu_type"  javaType="java.lang.String"/>
+      <arg   column="board_id"   javaType="java.lang.Long"/>
+    </constructor>
+  </resultMap>
+
+  <select id="findByRole" resultMap="MenuMap">
+    SELECT m.*
+      FROM menus m
+      JOIN menu_roles mr ON mr.menu_id = m.menu_id
+     WHERE mr.role_key = #{roleKey}
+       AND m.use_yn = TRUE
+     ORDER BY m.parent_id NULLS FIRST, m.sort_order ASC, m.menu_id ASC
+  </select>
+
+  <select id="findAll" resultMap="MenuMap">
+    SELECT m.*
+      FROM menus m
+     ORDER BY m.parent_id NULLS FIRST, m.sort_order ASC, m.menu_id ASC
+  </select>
+
+  <select id="findById" resultMap="MenuMap">
+    SELECT m.* FROM menus m WHERE m.menu_id = #{menuId}
+  </select>
+
+  <select id="findBoardsRootMenuId" resultType="long">
+    SELECT menu_id
+      FROM menus
+     WHERE parent_id IS NULL
+       AND menu_type = 'GROUP'
+       AND name = 'Boards'
+     ORDER BY menu_id
+     LIMIT 1
+  </select>
+
+  <select id="findMaxSortOrder" resultType="long">
+    SELECT COALESCE(MAX(sort_order), 0)
+      FROM menus
+     WHERE parent_id <if test="parentId == null">IS NULL</if><if test="parentId != null">= #{parentId}</if>
+  </select>
+
+  <insert id="insert" parameterType="com.example.commonsystem.menu.MenuCreateCommand" useGeneratedKeys="true" keyProperty="menuId" keyColumn="menu_id">
+    INSERT INTO menus(parent_id, name, path, icon, sort_order, use_yn, menu_type, board_id)
+    VALUES(#{parentId}, #{name}, #{path}, #{icon}, #{sortOrder}, #{useYn}, #{menuType}, #{boardId})
+  </insert>
+
+  <update id="update" parameterType="com.example.commonsystem.menu.MenuUpdateCommand">
+    UPDATE menus
+       SET parent_id = #{parentId},
+           name = #{name},
+           path = #{path},
+           icon = #{icon},
+           sort_order = #{sortOrder},
+           use_yn = #{useYn},
+           updated_at = NOW()
+     WHERE menu_id = #{menuId}
+  </update>
+
+  <delete id="delete">
+    DELETE FROM menus WHERE menu_id = #{menuId}
+  </delete>
+
+  <delete id="deleteRoles">
+    DELETE FROM menu_roles WHERE menu_id = #{menuId}
+  </delete>
+
+  <insert id="insertRole">
+    INSERT INTO menu_roles(menu_id, role_key) VALUES (#{menuId}, #{roleKey})
+    ON CONFLICT DO NOTHING
+  </insert>
+
+  <select id="findByBoardId" resultMap="MenuMap">
+    SELECT m.* FROM menus m WHERE m.board_id = #{boardId} LIMIT 1
+  </select>
+
+</mapper>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.commonsystem.role.RoleMapper">
+
+  <select id="count" resultType="long">
+    SELECT COUNT(*) FROM roles
+  </select>
+
+  <select id="findPage" resultType="com.example.commonsystem.role.Role">
+    SELECT role_key AS roleKey,
+           role_name AS roleName,
+           use_yn AS useYn
+      FROM roles
+     ORDER BY role_key
+     LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+  <select id="findAll" resultType="com.example.commonsystem.role.Role">
+    SELECT role_key AS roleKey,
+           role_name AS roleName,
+           use_yn AS useYn
+      FROM roles
+     ORDER BY role_key
+  </select>
+
+  <insert id="insert" parameterType="com.example.commonsystem.role.RoleCreateCommand">
+    INSERT INTO roles(role_key, role_name, use_yn)
+    VALUES(#{roleKey}, #{roleName}, #{useYn})
+  </insert>
+
+  <update id="update" parameterType="com.example.commonsystem.role.RoleUpdateCommand">
+    UPDATE roles
+       SET role_name = #{roleName},
+           use_yn = #{useYn}
+     WHERE role_key = #{roleKey}
+  </update>
+
+  <delete id="delete">
+    DELETE FROM roles WHERE role_key = #{roleKey}
+  </delete>
+
+</mapper>

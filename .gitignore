@@ -1,0 +1,20 @@
+# ─── Gradle ──────────────────────────────────────────────
+.gradle/
+build/
+bin/
+
+# ─── 로그 / 런타임 ───────────────────────────────────────
+logs/
+*.log
+*.pid
+*.hprof
+hs_err_pid*
+
+# ─── 파일 업로드 저장소 ──────────────────────────────────
+storage/
+
+# ─── 환경 변수 / 시크릿 ──────────────────────────────────
+.env
+.env.local
+src/main/resources/application-local.yml
+src/main/resources/application-*.local.yml

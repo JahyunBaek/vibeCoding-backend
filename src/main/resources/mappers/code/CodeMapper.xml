@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.commonsystem.code.CodeMapper">
+
+  <select id="countGroups" resultType="long">
+    SELECT COUNT(*) FROM code_groups
+  </select>
+
+  <select id="findGroupPage" resultType="com.example.commonsystem.code.CodeGroup">
+    SELECT group_key AS groupKey,
+           group_name AS groupName,
+           use_yn AS useYn
+      FROM code_groups
+     ORDER BY group_key
+     LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+  <select id="findAllGroups" resultType="com.example.commonsystem.code.CodeGroup">
+    SELECT group_key AS groupKey,
+           group_name AS groupName,
+           use_yn AS useYn
+      FROM code_groups
+     ORDER BY group_key
+  </select>
+
+  <insert id="insertGroup" parameterType="com.example.commonsystem.code.CodeGroupCreateCommand">
+    INSERT INTO code_groups(group_key, group_name, use_yn)
+    VALUES(#{groupKey}, #{groupName}, #{useYn})
+  </insert>
+
+  <update id="updateGroup" parameterType="com.example.commonsystem.code.CodeGroupUpdateCommand">
+    UPDATE code_groups
+       SET group_name = #{groupName},
+           use_yn = #{useYn},
+           updated_at = NOW()
+     WHERE group_key = #{groupKey}
+  </update>
+
+  <delete id="deleteGroup">
+    DELETE FROM code_groups WHERE group_key = #{groupKey}
+  </delete>
+
+  <select id="findCodesByGroup" resultType="com.example.commonsystem.code.CodeItem">
+    SELECT group_key AS groupKey,
+           code,
+           name,
+           value,
+           sort_order AS sortOrder,
+           use_yn AS useYn
+      FROM codes
+     WHERE group_key = #{groupKey}
+     ORDER BY sort_order ASC, code ASC
+  </select>
+
+  <insert id="insertCode" parameterType="com.example.commonsystem.code.CodeCreateCommand">
+    INSERT INTO codes(group_key, code, name, value, sort_order, use_yn)
+    VALUES(#{groupKey}, #{code}, #{name}, #{value}, #{sortOrder}, #{useYn})
+  </insert>
+
+  <update id="updateCode" parameterType="com.example.commonsystem.code.CodeUpdateCommand">
+    UPDATE codes
+       SET name = #{name},
+           value = #{value},
+           sort_order = #{sortOrder},
+           use_yn = #{useYn},
+           updated_at = NOW()
+     WHERE group_key = #{groupKey}
+       AND code = #{code}
+  </update>
+
+  <delete id="deleteCode">
+    DELETE FROM codes WHERE group_key = #{groupKey} AND code = #{code}
+  </delete>
+
+</mapper>

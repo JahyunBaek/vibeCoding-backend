@@ -1,0 +1,18 @@
+{
+    "java.jdt.ls.java.home": "C:\\Program Files\\Java\\jdk-25.0.1",
+  
+    "java.configuration.runtimes": [
+      {
+        "name": "JavaSE-25",
+        "path": "C:\\Program Files\\Java\\jdk-25.0.1",
+        "default": true
+      }
+    ],
+  
+    // ✅ XML 확장이 사용할 Java (11+ 필요)
+    "xml.java.home": "C:\\Program Files\\Java\\jdk-25.0.1",
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.compile.nullAnalysis.mode": "automatic",
+    "spring-boot.ls.java.home": "C:\\Program Files\\Java\\jdk-25.0.1",
+  }
+  

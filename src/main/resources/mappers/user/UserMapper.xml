@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.commonsystem.user.UserMapper">
+
+  <select id="findByUsername" parameterType="string" resultType="com.example.commonsystem.user.User">
+    SELECT user_id AS userId,
+           username,
+           password_hash AS passwordHash,
+           name,
+           role_key AS roleKey,
+           org_id AS orgId,
+           enabled
+      FROM users
+     WHERE username = #{username}
+     LIMIT 1
+  </select>
+
+  <select id="findById" parameterType="long" resultType="com.example.commonsystem.user.User">
+    SELECT user_id AS userId,
+           username,
+           password_hash AS passwordHash,
+           name,
+           role_key AS roleKey,
+           org_id AS orgId,
+           enabled
+      FROM users
+     WHERE user_id = #{userId}
+     LIMIT 1
+  </select>
+
+  <select id="count" resultType="long">
+    SELECT COUNT(*)
+      FROM users
+     WHERE 1=1
+    <if test="orgId != null">
+       AND org_id = #{orgId}
+    </if>
+  </select>
+
+  <select id="findPage" resultType="com.example.commonsystem.user.UserListRow">
+    SELECT user_id AS userId,
+           username,
+           name,
+           role_key AS roleKey,
+           org_id AS orgId,
+           enabled
+      FROM users
+     WHERE 1=1
+    <if test="orgId != null">
+       AND org_id = #{orgId}
+    </if>
+     ORDER BY user_id DESC
+     LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+  <insert id="insert" parameterType="com.example.commonsystem.user.UserCreateCommand">
+    INSERT INTO users(username, password_hash, name, role_key, org_id, enabled)
+    VALUES(#{username}, #{passwordHash}, #{name}, #{roleKey}, #{orgId}, #{enabled})
+  </insert>
+
+  <update id="update" parameterType="com.example.commonsystem.user.UserUpdateCommand">
+    UPDATE users
+       SET password_hash = COALESCE(#{passwordHash}, password_hash),
+           name = COALESCE(#{name}, name),
+           role_key = COALESCE(#{roleKey}, role_key),
+           org_id = #{orgId},
+           enabled = #{enabled},
+           updated_at = NOW()
+     WHERE user_id = #{userId}
+  </update>
+
+  <delete id="delete">
+    DELETE FROM users WHERE user_id = #{userId}
+  </delete>
+
+</mapper>

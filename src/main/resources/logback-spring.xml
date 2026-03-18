@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+  <property name="CONSOLE_LOG_PATTERN"
+            value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n"/>
+
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+    </encoder>
+  </appender>
+
+  <!-- =========================================================
+       local: p6spy 쿼리(파라미터 포함)만 보이게
+       ========================================================= -->
+  <springProfile name="local">
+
+    <!-- p6spy만 DEBUG -->
+    <logger name="p6spy" level="DEBUG" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+    </logger>
+    
+
+    <!-- ✅ “? 로 보이는 쿼리”를 주로 찍는 애들 OFF (중복 방지) -->
+    <!-- Hibernate SQL(placeholder ? 형태) -->
+    <logger name="org.hibernate.SQL" level="OFF"/>
+    <logger name="org.hibernate.type.descriptor.sql" level="OFF"/>
+    <logger name="org.hibernate.orm.jdbc.bind" level="OFF"/>
+
+    <!-- log4jdbc / jdbc.* 카테고리 (예: jdbc.sqltiming 등) -->
+    <logger name="jdbc" level="OFF"/>
+    <logger name="jdbc.sqlonly" level="OFF"/>
+    <logger name="jdbc.sqltiming" level="OFF"/>
+    <logger name="jdbc.audit" level="OFF"/>
+    <logger name="jdbc.resultset" level="OFF"/>
+    <logger name="jdbc.resultsettable" level="OFF"/>
+    <logger name="jdbc.connection" level="OFF"/>
+
+    <root level="INFO">
+      <appender-ref ref="CONSOLE"/>
+    </root>
+  </springProfile>
+
+
+  <!-- =========================================================
+       dev: 운영 전 검증용 (원하면 p6spy는 INFO 또는 OFF)
+       ========================================================= -->
+  <springProfile name="dev">
+
+    <!-- dev에서는 너무 시끄러우면 INFO 또는 OFF로 -->
+    <logger name="p6spy" level="INFO" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <!-- 중복 방지: 동일하게 OFF 유지 -->
+    <logger name="org.hibernate.SQL" level="OFF"/>
+    <logger name="org.hibernate.type.descriptor.sql" level="OFF"/>
+    <logger name="org.hibernate.orm.jdbc.bind" level="OFF"/>
+
+    <logger name="jdbc" level="OFF"/>
+    <logger name="jdbc.sqlonly" level="OFF"/>
+    <logger name="jdbc.sqltiming" level="OFF"/>
+    <logger name="jdbc.audit" level="OFF"/>
+    <logger name="jdbc.resultset" level="OFF"/>
+    <logger name="jdbc.resultsettable" level="OFF"/>
+    <logger name="jdbc.connection" level="OFF"/>
+
+    <root level="INFO">
+      <appender-ref ref="CONSOLE"/>
+    </root>
+  </springProfile>
+
+
+  <!-- =========================================================
+       prod: p6spy 완전 비활성 추천
+       ========================================================= -->
+  <springProfile name="prod">
+
+    <!-- prod에서는 p6spy 꺼버리는 걸 권장 -->
+    <logger name="p6spy" level="OFF"/>
+
+    <!-- 혹시라도 다른 SQL 로그도 필요 없으면 그대로 OFF -->
+    <logger name="org.hibernate.SQL" level="OFF"/>
+
+    <root level="INFO">
+      <appender-ref ref="CONSOLE"/>
+    </root>
+  </springProfile>
+
+</configuration>

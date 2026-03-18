@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.commonsystem.org.OrgMapper">
+
+  <select id="findAll" resultType="com.example.commonsystem.org.Org">
+    SELECT org_id AS orgId,
+           parent_id AS parentId,
+           name,
+           sort_order AS sortOrder,
+           use_yn AS useYn
+      FROM orgs
+     ORDER BY parent_id NULLS FIRST, sort_order ASC, org_id ASC
+  </select>
+
+  <select id="count" resultType="long">
+    SELECT COUNT(*) FROM orgs
+  </select>
+
+  <select id="findPage" resultType="com.example.commonsystem.org.Org">
+    SELECT org_id AS orgId,
+           parent_id AS parentId,
+           name,
+           sort_order AS sortOrder,
+           use_yn AS useYn
+      FROM orgs
+     ORDER BY org_id DESC
+     LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+  <insert id="insert" parameterType="com.example.commonsystem.org.OrgCreateCommand">
+    INSERT INTO orgs(parent_id, name, sort_order, use_yn)
+    VALUES(#{parentId}, #{name}, #{sortOrder}, #{useYn})
+  </insert>
+
+  <update id="update" parameterType="com.example.commonsystem.org.OrgUpdateCommand">
+    UPDATE orgs
+       SET parent_id = #{parentId},
+           name = #{name},
+           sort_order = #{sortOrder},
+           use_yn = #{useYn}
+     WHERE org_id = #{orgId}
+  </update>
+
+  <delete id="delete">
+    DELETE FROM orgs WHERE org_id = #{orgId}
+  </delete>
+
+</mapper>

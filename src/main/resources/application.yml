@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: common-system-backend
+  profiles:
+    active: local
+
+server:
+  port: 8888
+
+logging:
+  level:
+    root: INFO
