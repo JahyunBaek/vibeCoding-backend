@@ -23,12 +23,13 @@ public class MeController {
 
   public record UpdateMeRequest(
       @NotBlank String name,
+      String currentPassword,
       String newPassword
   ) {}
 
   @PutMapping
   public ApiResponse<Void> update(@AuthenticationPrincipal UserPrincipal principal, @RequestBody UpdateMeRequest req) {
-    userService.updateMe(principal.getUserId(), req.name(), req.newPassword());
+    userService.updateMe(principal.getUserId(), req.name(), req.currentPassword(), req.newPassword());
     return ApiResponse.ok();
   }
 }

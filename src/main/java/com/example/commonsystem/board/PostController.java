@@ -5,6 +5,7 @@ import com.example.commonsystem.common.ErrorCode;
 import com.example.commonsystem.common.IdempotencyService;
 import com.example.commonsystem.common.PageResponse;
 import com.example.commonsystem.common.exception.AppException;
+import com.example.commonsystem.permission.RequiresAction;
 import com.example.commonsystem.security.UserPrincipal;
 import java.util.List;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -38,6 +39,7 @@ public class PostController {
 
   public record CreatePostRequest(String title, String content, List<Long> fileIds) {}
 
+  @RequiresAction(screen = "BOARD_POST", action = "CREATE")
   @PostMapping
   public ApiResponse<Long> create(
       @PathVariable long boardId,
@@ -58,12 +60,14 @@ public class PostController {
 
   public record UpdatePostRequest(String title, String content, List<Long> fileIds) {}
 
+  @RequiresAction(screen = "BOARD_POST", action = "EDIT")
   @PutMapping("/{postId}")
   public ApiResponse<Void> update(@PathVariable long postId, @RequestBody UpdatePostRequest req) {
     postService.update(postId, req.title(), req.content(), req.fileIds());
     return ApiResponse.ok();
   }
 
+  @RequiresAction(screen = "BOARD_POST", action = "DELETE")
   @DeleteMapping("/{postId}")
   public ApiResponse<Void> delete(@PathVariable long postId) {
     postService.delete(postId);

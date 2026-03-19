@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.commonsystem.permission.PermissionMapper">
+
+  <select id="findActionsByRoleKey" resultType="com.example.commonsystem.permission.ScreenAction">
+    SELECT sa.action_id   AS actionId,
+           sa.screen_id   AS screenId,
+           s.screen_key   AS screenKey,
+           s.screen_name  AS screenName,
+           sa.action_key  AS actionKey,
+           sa.action_name AS actionName,
+           sa.use_yn      AS useYn
+      FROM role_actions ra
+      JOIN screen_actions sa ON sa.action_id = ra.action_id AND sa.use_yn = TRUE
+      JOIN screens s         ON s.screen_id  = sa.screen_id  AND s.use_yn  = TRUE
+     WHERE ra.role_key = #{roleKey}
+  </select>
+
+  <select id="findAllScreens" resultType="com.example.commonsystem.permission.Screen">
+    SELECT screen_id AS screenId, screen_key AS screenKey, screen_name AS screenName, use_yn AS useYn
+      FROM screens
+     ORDER BY screen_id
+  </select>
+
+  <insert id="insertScreen" parameterType="com.example.commonsystem.permission.Screen">
+    INSERT INTO screens (screen_key, screen_name, use_yn)
+    VALUES (#{screenKey}, #{screenName}, #{useYn})
+  </insert>
+
+  <update id="updateScreen" parameterType="com.example.commonsystem.permission.Screen">
+    UPDATE screens SET screen_name = #{screenName}, use_yn = #{useYn}
+     WHERE screen_id = #{screenId}
+  </update>
+
+  <delete id="deleteScreen">
+    DELETE FROM screens WHERE screen_id = #{screenId}
+  </delete>
+
+  <select id="findActionsByScreen" resultType="com.example.commonsystem.permission.ScreenAction">
+    SELECT sa.action_id   AS actionId,
+           sa.screen_id   AS screenId,
+           s.screen_key   AS screenKey,
+           s.screen_name  AS screenName,
+           sa.action_key  AS actionKey,
+           sa.action_name AS actionName,
+           sa.use_yn      AS useYn
+      FROM screen_actions sa
+      JOIN screens s ON s.screen_id = sa.screen_id
+     WHERE sa.screen_id = #{screenId}
+     ORDER BY sa.action_id
+  </select>
+
+  <insert id="insertAction" parameterType="com.example.commonsystem.permission.ScreenAction">
+    INSERT INTO screen_actions (screen_id, action_key, action_name, use_yn)
+    VALUES (#{screenId}, #{actionKey}, #{actionName}, #{useYn})
+  </insert>
+
+  <update id="updateAction" parameterType="com.example.commonsystem.permission.ScreenAction">
+    UPDATE screen_actions SET action_name = #{actionName}, use_yn = #{useYn}
+     WHERE action_id = #{actionId}
+  </update>
+
+  <delete id="deleteAction">
+    DELETE FROM screen_actions WHERE action_id = #{actionId}
+  </delete>
+
+  <select id="findRoleKeysByAction" resultType="string">
+    SELECT role_key FROM role_actions WHERE action_id = #{actionId}
+  </select>
+
+  <insert id="insertRoleAction">
+    INSERT INTO role_actions (role_key, action_id) VALUES (#{roleKey}, #{actionId})
+    ON CONFLICT DO NOTHING
+  </insert>
+
+  <delete id="deleteRoleAction">
+    DELETE FROM role_actions WHERE role_key = #{roleKey} AND action_id = #{actionId}
+  </delete>
+
+  <delete id="deleteRoleActionsByAction">
+    DELETE FROM role_actions WHERE action_id = #{actionId}
+  </delete>
+
+  <select id="hasPermission" resultType="boolean">
+    SELECT EXISTS (
+      SELECT 1
+        FROM role_actions ra
+        JOIN screen_actions sa ON sa.action_id = ra.action_id
+        JOIN screens s         ON s.screen_id  = sa.screen_id
+       WHERE ra.role_key   = #{roleKey}
+         AND s.screen_key  = #{screenKey}
+         AND sa.action_key = #{actionKey}
+         AND sa.use_yn = TRUE
+         AND s.use_yn  = TRUE
+    )
+  </select>
+
+</mapper>

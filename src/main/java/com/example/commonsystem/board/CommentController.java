@@ -1,6 +1,7 @@
 package com.example.commonsystem.board;
 
 import com.example.commonsystem.common.ApiResponse;
+import com.example.commonsystem.permission.RequiresAction;
 import com.example.commonsystem.security.UserPrincipal;
 import java.util.List;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,6 +24,7 @@ public class CommentController {
 
   public record CreateCommentRequest(String content) {}
 
+  @RequiresAction(screen = "BOARD_COMMENT", action = "CREATE")
   @PostMapping
   public ApiResponse<Void> create(@PathVariable long postId,
                                  @AuthenticationPrincipal UserPrincipal principal,

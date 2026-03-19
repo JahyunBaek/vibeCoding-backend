@@ -1,6 +1,8 @@
 package com.example.commonsystem.user;
 
+import com.example.commonsystem.common.ErrorCode;
 import com.example.commonsystem.common.PageResponse;
+import com.example.commonsystem.common.exception.AppException;
 import java.util.List;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,17 +25,30 @@ public class UserService {
 
   
   @Transactional
-  public void updateMe(long userId, String name, String newPassword) {
+  public void updateMe(long userId, String name, String currentPassword, String newPassword) {
     User current = userMapper.findById(userId);
-    if (current == null) {
-      return;
+    if (current == null) return;
+
+    String hash = null;
+    if (newPassword != null && !newPassword.isBlank()) {
+      // 현재 비밀번호 필수 확인
+      if (currentPassword == null || currentPassword.isBlank()) {
+        throw new AppException(ErrorCode.VALIDATION, "현재 비밀번호를 입력해주세요.");
+      }
+      if (!passwordEncoder.matches(currentPassword, current.passwordHash())) {
+        throw new AppException(ErrorCode.VALIDATION, "현재 비밀번호가 올바르지 않습니다.");
+      }
+      if (newPassword.length() < 8) {
+        throw new AppException(ErrorCode.VALIDATION, "새 비밀번호는 8자 이상이어야 합니다.");
+      }
+      hash = passwordEncoder.encode(newPassword);
     }
-    String hash = (newPassword == null || newPassword.isBlank()) ? null : passwordEncoder.encode(newPassword);
+
     userMapper.update(new UserUpdateCommand(
         userId,
         hash,
         name,
-        null,  // keep role
+        null,           // keep role
         current.orgId(),
         current.enabled()
     ));
