@@ -1,7 +1,7 @@
 package com.example.commonsystem.security;
 
-import com.example.commonsystem.user.User;
-import com.example.commonsystem.user.UserMapper;
+import com.example.commonsystem.user.domain.User;
+import com.example.commonsystem.user.mapper.UserMapper;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

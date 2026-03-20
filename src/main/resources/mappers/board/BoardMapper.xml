@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.commonsystem.board.BoardMapper">
+<mapper namespace="com.example.commonsystem.board.mapper.BoardMapper">
 
-  <select id="findActive" resultType="com.example.commonsystem.board.Board">
+  <select id="findActive" resultType="com.example.commonsystem.board.domain.Board">
     SELECT board_id AS boardId,
            name,
            description,
@@ -18,7 +18,7 @@
     SELECT COUNT(*) FROM boards
   </select>
 
-  <select id="findPage" resultType="com.example.commonsystem.board.BoardListRow">
+  <select id="findPage" resultType="com.example.commonsystem.board.dto.BoardListRow">
     SELECT board_id AS boardId,
            name,
            description,
@@ -28,7 +28,7 @@
      LIMIT #{limit} OFFSET #{offset}
   </select>
 
-  <select id="findById" resultType="com.example.commonsystem.board.Board">
+  <select id="findById" resultType="com.example.commonsystem.board.domain.Board">
     SELECT board_id AS boardId,
            name,
            description,
@@ -38,12 +38,12 @@
      LIMIT 1
   </select>
 
-  <insert id="insert" parameterType="com.example.commonsystem.board.BoardCreateCommand" useGeneratedKeys="true" keyProperty="boardId" keyColumn="board_id">
+  <insert id="insert" parameterType="com.example.commonsystem.board.dto.BoardCreateCommand" useGeneratedKeys="true" keyProperty="boardId" keyColumn="board_id">
     INSERT INTO boards(name, description, use_yn)
     VALUES(#{name}, #{description}, #{useYn})
   </insert>
 
-  <update id="update" parameterType="com.example.commonsystem.board.BoardUpdateCommand">
+  <update id="update" parameterType="com.example.commonsystem.board.dto.BoardUpdateCommand">
     UPDATE boards
        SET name = #{name},
            description = #{description},

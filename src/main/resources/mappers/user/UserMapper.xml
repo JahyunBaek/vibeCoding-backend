@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.commonsystem.user.UserMapper">
+<mapper namespace="com.example.commonsystem.user.mapper.UserMapper">
 
-  <select id="findByUsername" parameterType="string" resultType="com.example.commonsystem.user.User">
+  <select id="findByUsername" parameterType="string" resultType="com.example.commonsystem.user.domain.User">
     SELECT user_id AS userId,
            username,
            password_hash AS passwordHash,
@@ -17,7 +17,7 @@
      LIMIT 1
   </select>
 
-  <select id="findById" parameterType="long" resultType="com.example.commonsystem.user.User">
+  <select id="findById" parameterType="long" resultType="com.example.commonsystem.user.domain.User">
     SELECT user_id AS userId,
            username,
            password_hash AS passwordHash,
@@ -39,7 +39,7 @@
     </if>
   </select>
 
-  <select id="findPage" resultType="com.example.commonsystem.user.UserListRow">
+  <select id="findPage" resultType="com.example.commonsystem.user.dto.UserListRow">
     SELECT user_id AS userId,
            username,
            name,
@@ -55,12 +55,12 @@
      LIMIT #{limit} OFFSET #{offset}
   </select>
 
-  <insert id="insert" parameterType="com.example.commonsystem.user.UserCreateCommand">
+  <insert id="insert" parameterType="com.example.commonsystem.user.dto.UserCreateCommand">
     INSERT INTO users(username, password_hash, name, role_key, org_id, enabled)
     VALUES(#{username}, #{passwordHash}, #{name}, #{roleKey}, #{orgId}, #{enabled})
   </insert>
 
-  <update id="update" parameterType="com.example.commonsystem.user.UserUpdateCommand">
+  <update id="update" parameterType="com.example.commonsystem.user.dto.UserUpdateCommand">
     UPDATE users
        SET password_hash = COALESCE(#{passwordHash}, password_hash),
            name = COALESCE(#{name}, name),

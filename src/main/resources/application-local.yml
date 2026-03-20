@@ -1,0 +1,60 @@
+server:
+  port: 8888
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres?currentSchema=testdb
+    username: postgres
+    password: "1"
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      # Ensure all connections use the same schema as Flyway migrations.
+      connection-init-sql: SET search_path TO testdb;
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    default-schema: testdb
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 50MB
+      max-request-size: 100MB
+
+mybatis:
+  mapper-locations: classpath:mappers/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    default-fetch-size: 100
+    default-statement-timeout: 30
+
+# JWT & Security settings
+app:
+  jwt:
+    secret: local-dev-secret-key-must-be-at-least-256bits-long-change-in-prod
+    access-token-minutes: 5
+    refresh-token-minutes: 60
+  security:
+    refresh-cookie-name: REFRESH_TOKEN
+    refresh-cookie-path: /api/auth
+    refresh-cookie-samesite: Lax
+    refresh-cookie-secure: false
+  file-storage-path: ./storage
+  base-url: http://localhost:8888
+
+# p6spy: log SQL with bind variables replaced (so it won't show only '?' placeholders).
+decorator:
+  datasource:
+    p6spy:
+      enable-logging: true
+      logging: slf4j
+      multiline: false
+      log-format: "%(currentTime)|%(executionTime)|%(category)|connection%(connectionId)|%(sqlSingleLine)"
+
+logging:
+  level:
+    com.example.commonsystem: DEBUG
+    org.springframework.security: DEBUG

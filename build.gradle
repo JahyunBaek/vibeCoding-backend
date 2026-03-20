@@ -40,6 +40,9 @@ dependencies {
 
   testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
+  // HTML 파싱 & XSS 방어
+  implementation 'org.jsoup:jsoup:1.17.2'
+
   //lombok
   compileOnly 'org.projectlombok:lombok'
   annotationProcessor 'org.projectlombok:lombok'

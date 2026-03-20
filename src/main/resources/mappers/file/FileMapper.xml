@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.commonsystem.file.FileMapper">
+<mapper namespace="com.example.commonsystem.file.mapper.FileMapper">
 
-  <select id="findById" resultType="com.example.commonsystem.file.StoredFile">
+  <select id="findById" resultType="com.example.commonsystem.file.domain.StoredFile">
     SELECT file_id AS fileId,
            original_name AS originalName,
            saved_name AS savedName,
@@ -17,7 +17,7 @@
      LIMIT 1
   </select>
 
-  <insert id="insert" parameterType="com.example.commonsystem.file.FileCreateCommand" useGeneratedKeys="true" keyProperty="fileId" keyColumn="file_id">
+  <insert id="insert" parameterType="com.example.commonsystem.file.dto.FileCreateCommand" useGeneratedKeys="true" keyProperty="fileId" keyColumn="file_id">
     INSERT INTO files(original_name, saved_name, content_type, size_bytes, storage_path)
     VALUES(#{originalName}, #{savedName}, #{contentType}, #{sizeBytes}, #{storagePath})
   </insert>

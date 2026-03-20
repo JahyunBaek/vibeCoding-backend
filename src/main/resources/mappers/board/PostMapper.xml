@@ -2,13 +2,17 @@
 <!DOCTYPE mapper
   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.commonsystem.board.PostMapper">
+<mapper namespace="com.example.commonsystem.board.mapper.PostMapper">
 
   <select id="countByBoard" resultType="long">
-    SELECT COUNT(*) FROM posts WHERE board_id = #{boardId}
+    SELECT COUNT(*) FROM posts
+     WHERE board_id = #{boardId}
+    <if test="search != null and search != ''">
+       AND title LIKE CONCAT('%', #{search}, '%')
+    </if>
   </select>
 
-  <select id="findPageByBoard" resultType="com.example.commonsystem.board.PostListRow">
+  <select id="findPageByBoard" resultType="com.example.commonsystem.board.dto.PostListRow">
     SELECT p.post_id AS postId,
            p.board_id AS boardId,
            p.title,
@@ -17,11 +21,14 @@
       FROM posts p
       JOIN users u ON u.user_id = p.author_id
      WHERE p.board_id = #{boardId}
+    <if test="search != null and search != ''">
+       AND p.title LIKE CONCAT('%', #{search}, '%')
+    </if>
      ORDER BY p.post_id DESC
      LIMIT #{limit} OFFSET #{offset}
   </select>
 
-  <resultMap id="PostDetailMap" type="com.example.commonsystem.board.PostDetail">
+  <resultMap id="PostDetailMap" type="com.example.commonsystem.board.dto.PostDetail">
     <id property="postId" column="post_id"/>
     <result property="boardId" column="board_id"/>
     <result property="title" column="title"/>
@@ -31,7 +38,7 @@
     <result property="createdAt" column="created_at"/>
     <result property="updatedAt" column="updated_at"/>
     <collection property="files"
-                ofType="com.example.commonsystem.board.PostDetail$PostFileItem"
+                ofType="com.example.commonsystem.board.dto.PostDetail$PostFileItem"
                 column="post_id"
                 select="findFilesByPost"/>
   </resultMap>
@@ -51,7 +58,7 @@
      LIMIT 1
   </select>
 
-  <select id="findFilesByPost" resultType="com.example.commonsystem.board.PostDetail$PostFileItem">
+  <select id="findFilesByPost" resultType="com.example.commonsystem.board.dto.PostDetail$PostFileItem">
     SELECT f.file_id AS fileId,
            f.original_name AS originalName
       FROM post_files pf
@@ -60,12 +67,12 @@
      ORDER BY f.file_id
   </select>
 
-  <insert id="insert" parameterType="com.example.commonsystem.board.PostCreateCommand" useGeneratedKeys="true" keyProperty="postId" keyColumn="post_id">
+  <insert id="insert" parameterType="com.example.commonsystem.board.dto.PostCreateCommand" useGeneratedKeys="true" keyProperty="postId" keyColumn="post_id">
     INSERT INTO posts(board_id, title, content, author_id)
     VALUES(#{boardId}, #{title}, #{content}, #{authorId})
   </insert>
 
-  <update id="update" parameterType="com.example.commonsystem.board.PostUpdateCommand">
+  <update id="update" parameterType="com.example.commonsystem.board.dto.PostUpdateCommand">
     UPDATE posts
        SET title = #{title},
            content = #{content},

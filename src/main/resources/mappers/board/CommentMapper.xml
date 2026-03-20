@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.commonsystem.board.CommentMapper">
+<mapper namespace="com.example.commonsystem.board.mapper.CommentMapper">
 
-  <select id="findByPost" resultType="com.example.commonsystem.board.Comment">
+  <select id="findByPost" resultType="com.example.commonsystem.board.domain.Comment">
     SELECT c.comment_id AS commentId,
            c.post_id AS postId,
            c.author_id AS authorId,
@@ -17,7 +17,7 @@
      ORDER BY c.comment_id ASC
   </select>
 
-  <insert id="insert" parameterType="com.example.commonsystem.board.CommentCreateCommand">
+  <insert id="insert" parameterType="com.example.commonsystem.board.dto.CommentCreateCommand">
     INSERT INTO comments(post_id, author_id, content)
     VALUES(#{postId}, #{authorId}, #{content})
   </insert>
