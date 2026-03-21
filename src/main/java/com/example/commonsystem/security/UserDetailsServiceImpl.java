@@ -29,6 +29,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         user.roleKey(),
         user.name(),
         user.orgId(),
+        user.tenantId(),
         user.enabled()
     );
   }

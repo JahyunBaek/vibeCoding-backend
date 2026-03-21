@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.commonsystem.tenant.mapper.TenantConfigMapper">
+
+  <select id="findByTenantId" resultType="com.example.commonsystem.tenant.domain.TenantConfig">
+    SELECT tenant_id   AS tenantId,
+           config_key  AS configKey,
+           config_value AS configValue,
+           updated_at  AS updatedAt
+      FROM tenant_configs
+     WHERE tenant_id = #{tenantId}
+     ORDER BY config_key
+  </select>
+
+  <insert id="upsert">
+    INSERT INTO tenant_configs (tenant_id, config_key, config_value, updated_at)
+    VALUES (#{tenantId}, #{configKey}, #{configValue}, NOW())
+    ON CONFLICT (tenant_id, config_key) DO UPDATE
+       SET config_value = EXCLUDED.config_value,
+           updated_at   = NOW()
+  </insert>
+
+  <delete id="deleteByTenantId">
+    DELETE FROM tenant_configs WHERE tenant_id = #{tenantId}
+  </delete>
+
+</mapper>

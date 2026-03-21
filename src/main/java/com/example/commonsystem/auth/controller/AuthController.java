@@ -1,5 +1,6 @@
 package com.example.commonsystem.auth.controller;
 
+import com.example.commonsystem.audit.service.AuditService;
 import com.example.commonsystem.auth.dto.AuthDtos.LoginRequest;
 import com.example.commonsystem.auth.dto.AuthDtos.TokenResponse;
 import com.example.commonsystem.auth.dto.AuthDtos.UserSummary;
@@ -24,6 +25,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -41,6 +43,7 @@ public class AuthController {
   private final SecurityProperties securityProperties;
   private final RefreshTokenService refreshTokenService;
   private final UserMapper userMapper;
+  private final AuditService auditService;
 
   @PostMapping("/login")
   public ResponseEntity<ApiResponse<TokenResponse>> login(@Valid @RequestBody LoginRequest req, HttpServletResponse res) {
@@ -54,7 +57,8 @@ public class AuthController {
         principal.getUsername(),
         principal.getRoleKey(),
         principal.getName(),
-        principal.getOrgId()
+        principal.getOrgId(),
+        principal.getTenantId()
     );
 
     Duration refreshTtl = Duration.ofMinutes(jwtProperties.refreshTokenMinutes());
@@ -62,8 +66,11 @@ public class AuthController {
     setRefreshCookie(res, refresh, refreshTtl);
 
     TokenResponse body = new TokenResponse(access, new UserSummary(
-        principal.getUserId(), principal.getUsername(), principal.getName(), principal.getRoleKey(), principal.getOrgId()
+        principal.getUserId(), principal.getUsername(), principal.getName(),
+        principal.getRoleKey(), principal.getOrgId(), principal.getTenantId()
     ));
+    auditService.log(principal.getTenantId(), principal.getUserId(), principal.getUsername(),
+        "LOGIN", "USER", String.valueOf(principal.getUserId()), null);
     return ResponseEntity.ok(ApiResponse.ok(body));
   }
 
@@ -97,11 +104,13 @@ public class AuthController {
         user.username(),
         user.roleKey(),
         user.name(),
-        user.orgId()
+        user.orgId(),
+        user.tenantId()
     );
 
     TokenResponse body = new TokenResponse(access, new UserSummary(
-        user.userId(), user.username(), user.name(), user.roleKey(), user.orgId()
+        user.userId(), user.username(), user.name(), user.roleKey(),
+        user.orgId(), user.tenantId()
     ));
     return ResponseEntity.ok(ApiResponse.ok(body));
   }
@@ -109,8 +118,13 @@ public class AuthController {
   @PostMapping("/logout")
   public ResponseEntity<ApiResponse<Void>> logout(
       @CookieValue(name = "REFRESH_TOKEN", required = false) String refreshToken,
-      HttpServletResponse res
+      HttpServletResponse res,
+      @AuthenticationPrincipal UserPrincipal principal
   ) {
+    if (principal != null) {
+      auditService.log(principal.getTenantId(), principal.getUserId(), principal.getUsername(),
+          "LOGOUT", "USER", String.valueOf(principal.getUserId()), null);
+    }
     refreshTokenService.revoke(refreshToken);
     clearRefreshCookie(res);
     return ResponseEntity.ok(ApiResponse.ok());

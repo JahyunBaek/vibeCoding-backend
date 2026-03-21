@@ -9,10 +9,11 @@ import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface OrgMapper {
-  List<Org> findAll();
+  List<Org> findAll(@Param("tenantId") Long tenantId);
 
-  long count();
-  List<Org> findPage(@Param("limit") int limit, @Param("offset") int offset);
+  long count(@Param("tenantId") Long tenantId);
+  List<Org> findPage(@Param("tenantId") Long tenantId,
+      @Param("limit") int limit, @Param("offset") int offset);
 
   void insert(OrgCreateCommand cmd);
   void update(OrgUpdateCommand cmd);

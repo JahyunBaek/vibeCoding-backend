@@ -10,10 +10,11 @@ import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface BoardMapper {
-  List<Board> findActive();
+  List<Board> findActive(@Param("tenantId") Long tenantId);
 
-  long count();
-  List<BoardListRow> findPage(@Param("limit") int limit, @Param("offset") int offset);
+  long count(@Param("tenantId") Long tenantId);
+  List<BoardListRow> findPage(@Param("tenantId") Long tenantId,
+      @Param("limit") int limit, @Param("offset") int offset);
 
   Board findById(@Param("boardId") long boardId);
 

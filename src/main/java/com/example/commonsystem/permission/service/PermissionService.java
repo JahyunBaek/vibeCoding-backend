@@ -1,6 +1,7 @@
 package com.example.commonsystem.permission.service;
 
 import com.example.commonsystem.common.ErrorCode;
+import com.example.commonsystem.common.TenantContextHolder;
 import com.example.commonsystem.common.exception.AppException;
 import com.example.commonsystem.permission.domain.Screen;
 import com.example.commonsystem.permission.domain.ScreenAction;
@@ -19,15 +20,29 @@ import org.springframework.transaction.annotation.Transactional;
 public class PermissionService {
 
   private final PermissionMapper permissionMapper;
+  private final TenantContextHolder tenantCtx;
 
-  public PermissionService(PermissionMapper permissionMapper) {
+  public PermissionService(PermissionMapper permissionMapper, TenantContextHolder tenantCtx) {
     this.permissionMapper = permissionMapper;
+    this.tenantCtx = tenantCtx;
   }
 
   /** 현재 유저의 권한 목록 (screenKey → actions) */
   public List<UserPermission> myPermissions() {
+    // SUPER_ADMIN은 모든 권한 보유 — DB 조회 없이 전체 액션 반환
+    if (tenantCtx.isSuperAdmin()) {
+      List<ScreenAction> all = permissionMapper.findAllActions();
+      Map<String, List<String>> grouped = all.stream()
+          .collect(Collectors.groupingBy(
+              ScreenAction::screenKey,
+              Collectors.mapping(ScreenAction::actionKey, Collectors.toList())
+          ));
+      return grouped.entrySet().stream()
+          .map(e -> new UserPermission(e.getKey(), e.getValue()))
+          .collect(Collectors.toList());
+    }
     String roleKey = currentRoleKey();
-    List<ScreenAction> actions = permissionMapper.findActionsByRoleKey(roleKey);
+    List<ScreenAction> actions = permissionMapper.findActionsByRoleKey(roleKey, effectiveTenantId());
     Map<String, List<String>> grouped = actions.stream()
         .collect(Collectors.groupingBy(
             ScreenAction::screenKey,
@@ -40,8 +55,10 @@ public class PermissionService {
 
   /** AOP에서 호출: 현재 유저가 해당 action 권한이 있는지 확인 */
   public void checkAction(String screenKey, String actionKey) {
+    // SUPER_ADMIN은 모든 액션 허용
+    if (tenantCtx.isSuperAdmin()) return;
     String roleKey = currentRoleKey();
-    if (!permissionMapper.hasPermission(roleKey, screenKey, actionKey)) {
+    if (!permissionMapper.hasPermission(roleKey, screenKey, actionKey, effectiveTenantId())) {
       throw new AppException(ErrorCode.FORBIDDEN, "해당 작업에 대한 권한이 없습니다.");
     }
   }
@@ -83,21 +100,29 @@ public class PermissionService {
 
   @Transactional
   public void deleteAction(int actionId) {
-    permissionMapper.deleteRoleActionsByAction(actionId);
+    permissionMapper.deleteAllRoleActionsByAction(actionId);
     permissionMapper.deleteAction(actionId);
   }
 
   // --- Admin: Role-Action Mapping ---
   public List<String> rolesByAction(int actionId) {
-    return permissionMapper.findRoleKeysByAction(actionId);
+    return permissionMapper.findRoleKeysByAction(actionId, effectiveTenantId());
   }
 
   @Transactional
   public void setRoleActions(int actionId, List<String> roleKeys) {
-    permissionMapper.deleteRoleActionsByAction(actionId);
+    Long tenantId = effectiveTenantId();
+    permissionMapper.deleteRoleActionsByAction(actionId, tenantId);
     for (String roleKey : roleKeys) {
-      permissionMapper.insertRoleAction(roleKey, actionId);
+      if ("SUPER_ADMIN".equals(roleKey) && !tenantCtx.isSuperAdmin()) continue;
+      permissionMapper.insertRoleAction(roleKey, actionId, tenantId);
     }
+  }
+
+  /** SUPER_ADMIN은 시스템 테넌트(0)를 사용, 일반 사용자는 자신의 테넌트 ID */
+  private Long effectiveTenantId() {
+    Long tid = tenantCtx.currentTenantId();
+    return tid != null ? tid : 0L;
   }
 
   private String currentRoleKey() {

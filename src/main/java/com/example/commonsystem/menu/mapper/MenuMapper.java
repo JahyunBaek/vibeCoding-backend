@@ -10,13 +10,13 @@ import org.apache.ibatis.annotations.Param;
 @Mapper
 public interface MenuMapper {
 
-  List<Menu> findByRole(@Param("roleKey") String roleKey);
+  List<Menu> findByRole(@Param("roleKey") String roleKey, @Param("tenantId") Long tenantId);
 
-  List<Menu> findAll();
+  List<Menu> findAll(@Param("tenantId") Long tenantId);
 
   Menu findById(@Param("menuId") long menuId);
 
-  Long findBoardsRootMenuId();
+  Long findBoardsRootMenuId(@Param("tenantId") Long tenantId);
 
   Long findMaxSortOrder(@Param("parentId") Long parentId);
 

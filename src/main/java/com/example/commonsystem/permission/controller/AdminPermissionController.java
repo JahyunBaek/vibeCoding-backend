@@ -6,10 +6,12 @@ import com.example.commonsystem.permission.domain.ScreenAction;
 import com.example.commonsystem.permission.service.PermissionService;
 import jakarta.validation.constraints.NotBlank;
 import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/admin/permissions")
+@PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
 public class AdminPermissionController {
 
   private final PermissionService permissionService;

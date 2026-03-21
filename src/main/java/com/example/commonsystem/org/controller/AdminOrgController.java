@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/admin/orgs")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
 public class AdminOrgController {
 
   private final OrgService orgService;
@@ -23,19 +23,22 @@ public class AdminOrgController {
   }
 
   @GetMapping("/tree")
-  public ApiResponse<List<OrgNode>> tree() {
-    return ApiResponse.ok(orgService.tree());
+  public ApiResponse<List<OrgNode>> tree(@RequestParam(required = false) Long tenantId) {
+    return ApiResponse.ok(orgService.tree(tenantId));
   }
 
   @GetMapping
   public ApiResponse<PageResponse<Org>> list(@RequestParam(defaultValue = "1") int page,
-                                             @RequestParam(defaultValue = "20") int size) {
-    return ApiResponse.ok(orgService.page(page, size));
+                                             @RequestParam(defaultValue = "20") int size,
+                                             @RequestParam(required = false) Long tenantId) {
+    return ApiResponse.ok(orgService.page(page, size, tenantId));
   }
 
+  public record CreateOrgRequest(Long parentId, String name, int sortOrder, boolean useYn, Long tenantId) {}
+
   @PostMapping
-  public ApiResponse<Void> create(@RequestBody OrgCreateCommand cmd) {
-    orgService.create(cmd);
+  public ApiResponse<Void> create(@RequestBody CreateOrgRequest req) {
+    orgService.create(req.parentId(), req.name(), req.sortOrder(), req.useYn(), req.tenantId());
     return ApiResponse.ok();
   }
 

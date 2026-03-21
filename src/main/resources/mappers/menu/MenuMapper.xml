@@ -18,18 +18,27 @@
     </constructor>
   </resultMap>
 
+  <!-- SUPER_ADMIN(tenantId=null) → system tenant(0), 일반 사용자 → 자신의 tenant -->
   <select id="findByRole" resultMap="MenuMap">
     SELECT m.*
       FROM menus m
       JOIN menu_roles mr ON mr.menu_id = m.menu_id
      WHERE mr.role_key = #{roleKey}
        AND m.use_yn = TRUE
+       AND m.tenant_id = <choose>
+             <when test="tenantId != null">#{tenantId}</when>
+             <otherwise>0</otherwise>
+           </choose>
      ORDER BY m.parent_id NULLS FIRST, m.sort_order ASC, m.menu_id ASC
   </select>
 
   <select id="findAll" resultMap="MenuMap">
     SELECT m.*
       FROM menus m
+     WHERE 1=1
+    <if test="tenantId != null">
+       AND m.tenant_id = #{tenantId}
+    </if>
      ORDER BY m.parent_id NULLS FIRST, m.sort_order ASC, m.menu_id ASC
   </select>
 
@@ -43,6 +52,7 @@
      WHERE parent_id IS NULL
        AND menu_type = 'GROUP'
        AND name = 'Boards'
+       AND tenant_id = #{tenantId}
      ORDER BY menu_id
      LIMIT 1
   </select>
@@ -53,9 +63,10 @@
      WHERE parent_id <if test="parentId == null">IS NULL</if><if test="parentId != null">= #{parentId}</if>
   </select>
 
-  <insert id="insert" parameterType="com.example.commonsystem.menu.dto.MenuCreateCommand" useGeneratedKeys="true" keyProperty="menuId" keyColumn="menu_id">
-    INSERT INTO menus(parent_id, name, path, icon, sort_order, use_yn, menu_type, board_id)
-    VALUES(#{parentId}, #{name}, #{path}, #{icon}, #{sortOrder}, #{useYn}, #{menuType}, #{boardId})
+  <insert id="insert" parameterType="com.example.commonsystem.menu.dto.MenuCreateCommand"
+          useGeneratedKeys="true" keyProperty="menuId" keyColumn="menu_id">
+    INSERT INTO menus(parent_id, name, path, icon, sort_order, use_yn, menu_type, board_id, tenant_id)
+    VALUES(#{parentId}, #{name}, #{path}, #{icon}, #{sortOrder}, #{useYn}, #{menuType}, #{boardId}, #{tenantId})
   </insert>
 
   <update id="update" parameterType="com.example.commonsystem.menu.dto.MenuUpdateCommand">

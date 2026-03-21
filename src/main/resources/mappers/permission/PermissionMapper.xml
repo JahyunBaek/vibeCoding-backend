@@ -3,6 +3,19 @@
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.commonsystem.permission.mapper.PermissionMapper">
 
+  <select id="findAllActions" resultType="com.example.commonsystem.permission.domain.ScreenAction">
+    SELECT sa.action_id   AS actionId,
+           sa.screen_id   AS screenId,
+           s.screen_key   AS screenKey,
+           s.screen_name  AS screenName,
+           sa.action_key  AS actionKey,
+           sa.action_name AS actionName,
+           sa.use_yn      AS useYn
+      FROM screen_actions sa
+      JOIN screens s ON s.screen_id = sa.screen_id
+     WHERE sa.use_yn = TRUE AND s.use_yn = TRUE
+  </select>
+
   <select id="findActionsByRoleKey" resultType="com.example.commonsystem.permission.domain.ScreenAction">
     SELECT sa.action_id   AS actionId,
            sa.screen_id   AS screenId,
@@ -14,7 +27,8 @@
       FROM role_actions ra
       JOIN screen_actions sa ON sa.action_id = ra.action_id AND sa.use_yn = TRUE
       JOIN screens s         ON s.screen_id  = sa.screen_id  AND s.use_yn  = TRUE
-     WHERE ra.role_key = #{roleKey}
+     WHERE ra.role_key  = #{roleKey}
+       AND ra.tenant_id = #{tenantId}
   </select>
 
   <select id="findAllScreens" resultType="com.example.commonsystem.permission.domain.Screen">
@@ -66,19 +80,24 @@
   </delete>
 
   <select id="findRoleKeysByAction" resultType="string">
-    SELECT role_key FROM role_actions WHERE action_id = #{actionId}
+    SELECT role_key FROM role_actions WHERE action_id = #{actionId} AND tenant_id = #{tenantId}
   </select>
 
   <insert id="insertRoleAction">
-    INSERT INTO role_actions (role_key, action_id) VALUES (#{roleKey}, #{actionId})
+    INSERT INTO role_actions (tenant_id, role_key, action_id) VALUES (#{tenantId}, #{roleKey}, #{actionId})
     ON CONFLICT DO NOTHING
   </insert>
 
   <delete id="deleteRoleAction">
-    DELETE FROM role_actions WHERE role_key = #{roleKey} AND action_id = #{actionId}
+    DELETE FROM role_actions WHERE tenant_id = #{tenantId} AND role_key = #{roleKey} AND action_id = #{actionId}
   </delete>
 
   <delete id="deleteRoleActionsByAction">
+    DELETE FROM role_actions WHERE action_id = #{actionId} AND tenant_id = #{tenantId}
+  </delete>
+
+  <!-- screen_action 삭제 시 모든 테넌트의 role_actions cascade 삭제 -->
+  <delete id="deleteAllRoleActionsByAction">
     DELETE FROM role_actions WHERE action_id = #{actionId}
   </delete>
 
@@ -89,6 +108,7 @@
         JOIN screen_actions sa ON sa.action_id = ra.action_id
         JOIN screens s         ON s.screen_id  = sa.screen_id
        WHERE ra.role_key   = #{roleKey}
+         AND ra.tenant_id  = #{tenantId}
          AND s.screen_key  = #{screenKey}
          AND sa.action_key = #{actionKey}
          AND sa.use_yn = TRUE

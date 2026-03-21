@@ -48,8 +48,9 @@ Controllers → Services → Mappers (MyBatis) → PostgreSQL
 | `board/` | Board + Post + Comment CRUD |
 | `file/` | File upload/download (stored in `/app/storage`) |
 | `code/` | Common code groups/items (dropdown data, cached in Redis) |
+| `tenant/` | Tenant CRUD + provisioning (SUPER_ADMIN only) |
 | `dashboard/` | Summary stats |
-| `common/` | `ApiResponse<T>`, `PageResponse<T>`, `AppException`, `GlobalExceptionHandler`, `ErrorCode` |
+| `common/` | `ApiResponse<T>`, `PageResponse<T>`, `AppException`, `GlobalExceptionHandler`, `ErrorCode`, `TenantContextHolder` |
 | `config/` | `SecurityConfig`, `RedisConfig`, `WebMvcConfig`, etc. |
 
 ### Authentication
@@ -70,6 +71,28 @@ Controllers → Services → Mappers (MyBatis) → PostgreSQL
 
 - All responses wrap with `ApiResponse<T>` (success) or return an `AppException` (caught by `GlobalExceptionHandler`)
 - Paginated list endpoints use `PageResponse<T>` with `page`, `size`, `total`
-- Admin endpoints are under `/api/admin/**`; user endpoints are `/api/**`
+- Admin endpoints are under `/api/admin/**`; user endpoints are `/api/**`; super-admin under `/api/super-admin/**`
 - When a new `Board` is created, the service automatically inserts a corresponding `Menu` entry of type `BOARD`
 - File metadata is stored in the `files` table; actual files go to the `storage/` directory; associations to posts via `post_files`
+
+### 멀티테넌시 (SaaS)
+
+**역할 계층**:
+- `SUPER_ADMIN`: `tenant_id = NULL`. 모든 테넌트 데이터 접근. `/api/super-admin/**` 전용 엔드포인트.
+- `ADMIN`: 특정 테넌트의 관리자. JWT `tid` 클레임에 tenantId 포함.
+- `USER`: 일반 사용자.
+
+**Tenant ID 추출**:
+- `TenantContextHolder` (`common/`) — `SecurityContext`의 `UserPrincipal`에서 `tenantId` 추출.
+- `currentTenantId()`: `SUPER_ADMIN`이면 `null` 반환 (전체 조회용).
+- `isSuperAdmin()`: roleKey가 `"SUPER_ADMIN"`인지 확인.
+
+**모든 테넌트 격리 테이블**: `users`, `orgs`, `menus`, `boards`, `code_groups`, `codes`, `role_actions`, `files`에 `tenant_id` 컬럼 추가.
+
+**글로벌 테이블** (테넌트 격리 없음): `roles`, `screens`, `screen_actions`
+
+**테넌트 프로비저닝**: `TenantService.provisionTenant()` — 새 테넌트 생성 시 메뉴, 게시판, 역할 권한, 공통코드 자동 초기화.
+
+**캐시 키**: Redis 공통코드 캐시는 `codes:{tenantId}:{groupKey}` 형태로 테넌트별 분리.
+
+**DB 마이그레이션**: `V4__multi_tenant.sql` — tenants 테이블, 기존 테이블에 tenant_id 컬럼 추가, system tenant(0), default tenant(1), SUPER_ADMIN 시드.

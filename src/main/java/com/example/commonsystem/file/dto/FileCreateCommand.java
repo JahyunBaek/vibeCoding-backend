@@ -6,17 +6,20 @@ public class FileCreateCommand {
   private String contentType;
   private long sizeBytes;
   private String storagePath;
+  private Long tenantId;
 
+  // filled by MyBatis useGeneratedKeys
   private Long fileId;
 
   public FileCreateCommand() {}
 
-  public FileCreateCommand(String originalName, String savedName, String contentType, long sizeBytes, String storagePath) {
+  public FileCreateCommand(String originalName, String savedName, String contentType, long sizeBytes, String storagePath, Long tenantId) {
     this.originalName = originalName;
     this.savedName = savedName;
     this.contentType = contentType;
     this.sizeBytes = sizeBytes;
     this.storagePath = storagePath;
+    this.tenantId = tenantId;
   }
 
   public String getOriginalName() { return originalName; }
@@ -33,6 +36,9 @@ public class FileCreateCommand {
 
   public String getStoragePath() { return storagePath; }
   public void setStoragePath(String storagePath) { this.storagePath = storagePath; }
+
+  public Long getTenantId() { return tenantId; }
+  public void setTenantId(Long tenantId) { this.tenantId = tenantId; }
 
   public Long getFileId() { return fileId; }
   public void setFileId(Long fileId) { this.fileId = fileId; }

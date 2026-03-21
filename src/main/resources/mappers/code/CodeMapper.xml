@@ -6,72 +6,102 @@
 
   <select id="countGroups" resultType="long">
     SELECT COUNT(*) FROM code_groups
+     WHERE 1=1
+    <if test="tenantId != null">
+       AND tenant_id = #{tenantId}
+    </if>
   </select>
 
   <select id="findGroupPage" resultType="com.example.commonsystem.code.domain.CodeGroup">
-    SELECT group_key AS groupKey,
+    SELECT group_key  AS groupKey,
            group_name AS groupName,
-           use_yn AS useYn
+           use_yn     AS useYn
       FROM code_groups
+     WHERE 1=1
+    <if test="tenantId != null">
+       AND tenant_id = #{tenantId}
+    </if>
      ORDER BY group_key
      LIMIT #{limit} OFFSET #{offset}
   </select>
 
   <select id="findAllGroups" resultType="com.example.commonsystem.code.domain.CodeGroup">
-    SELECT group_key AS groupKey,
+    SELECT group_key  AS groupKey,
            group_name AS groupName,
-           use_yn AS useYn
+           use_yn     AS useYn
       FROM code_groups
+     WHERE 1=1
+    <if test="tenantId != null">
+       AND tenant_id = #{tenantId}
+    </if>
      ORDER BY group_key
   </select>
 
   <insert id="insertGroup" parameterType="com.example.commonsystem.code.dto.CodeGroupCreateCommand">
-    INSERT INTO code_groups(group_key, group_name, use_yn)
-    VALUES(#{groupKey}, #{groupName}, #{useYn})
+    INSERT INTO code_groups(group_key, group_name, use_yn, tenant_id)
+    VALUES(#{groupKey}, #{groupName}, #{useYn}, #{tenantId})
   </insert>
 
   <update id="updateGroup" parameterType="com.example.commonsystem.code.dto.CodeGroupUpdateCommand">
     UPDATE code_groups
        SET group_name = #{groupName},
-           use_yn = #{useYn},
+           use_yn     = #{useYn},
            updated_at = NOW()
-     WHERE group_key = #{groupKey}
+     WHERE group_key  = #{groupKey}
+    <if test="tenantId != null">
+       AND tenant_id = #{tenantId}
+    </if>
   </update>
 
   <delete id="deleteGroup">
-    DELETE FROM code_groups WHERE group_key = #{groupKey}
+    DELETE FROM code_groups
+     WHERE group_key = #{groupKey}
+    <if test="tenantId != null">
+       AND tenant_id = #{tenantId}
+    </if>
   </delete>
 
   <select id="findCodesByGroup" resultType="com.example.commonsystem.code.domain.CodeItem">
-    SELECT group_key AS groupKey,
+    SELECT group_key  AS groupKey,
            code,
            name,
            value,
            sort_order AS sortOrder,
-           use_yn AS useYn
+           use_yn     AS useYn
       FROM codes
      WHERE group_key = #{groupKey}
+    <if test="tenantId != null">
+       AND tenant_id = #{tenantId}
+    </if>
      ORDER BY sort_order ASC, code ASC
   </select>
 
   <insert id="insertCode" parameterType="com.example.commonsystem.code.dto.CodeCreateCommand">
-    INSERT INTO codes(group_key, code, name, value, sort_order, use_yn)
-    VALUES(#{groupKey}, #{code}, #{name}, #{value}, #{sortOrder}, #{useYn})
+    INSERT INTO codes(group_key, code, name, value, sort_order, use_yn, tenant_id)
+    VALUES(#{groupKey}, #{code}, #{name}, #{value}, #{sortOrder}, #{useYn}, #{tenantId})
   </insert>
 
   <update id="updateCode" parameterType="com.example.commonsystem.code.dto.CodeUpdateCommand">
     UPDATE codes
-       SET name = #{name},
-           value = #{value},
+       SET name       = #{name},
+           value      = #{value},
            sort_order = #{sortOrder},
-           use_yn = #{useYn},
+           use_yn     = #{useYn},
            updated_at = NOW()
-     WHERE group_key = #{groupKey}
-       AND code = #{code}
+     WHERE group_key  = #{groupKey}
+       AND code       = #{code}
+    <if test="tenantId != null">
+       AND tenant_id  = #{tenantId}
+    </if>
   </update>
 
   <delete id="deleteCode">
-    DELETE FROM codes WHERE group_key = #{groupKey} AND code = #{code}
+    DELETE FROM codes
+     WHERE group_key = #{groupKey}
+       AND code      = #{code}
+    <if test="tenantId != null">
+       AND tenant_id = #{tenantId}
+    </if>
   </delete>
 
 </mapper>

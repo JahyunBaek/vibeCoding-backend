@@ -11,11 +11,18 @@
            use_yn AS useYn
       FROM boards
      WHERE use_yn = TRUE
+    <if test="tenantId != null">
+       AND tenant_id = #{tenantId}
+    </if>
      ORDER BY board_id
   </select>
 
   <select id="count" resultType="long">
     SELECT COUNT(*) FROM boards
+     WHERE 1=1
+    <if test="tenantId != null">
+       AND tenant_id = #{tenantId}
+    </if>
   </select>
 
   <select id="findPage" resultType="com.example.commonsystem.board.dto.BoardListRow">
@@ -24,6 +31,10 @@
            description,
            use_yn AS useYn
       FROM boards
+     WHERE 1=1
+    <if test="tenantId != null">
+       AND tenant_id = #{tenantId}
+    </if>
      ORDER BY board_id DESC
      LIMIT #{limit} OFFSET #{offset}
   </select>
@@ -38,9 +49,10 @@
      LIMIT 1
   </select>
 
-  <insert id="insert" parameterType="com.example.commonsystem.board.dto.BoardCreateCommand" useGeneratedKeys="true" keyProperty="boardId" keyColumn="board_id">
-    INSERT INTO boards(name, description, use_yn)
-    VALUES(#{name}, #{description}, #{useYn})
+  <insert id="insert" parameterType="com.example.commonsystem.board.dto.BoardCreateCommand"
+          useGeneratedKeys="true" keyProperty="boardId" keyColumn="board_id">
+    INSERT INTO boards(name, description, use_yn, tenant_id)
+    VALUES(#{name}, #{description}, #{useYn}, #{tenantId})
   </insert>
 
   <update id="update" parameterType="com.example.commonsystem.board.dto.BoardUpdateCommand">

@@ -12,17 +12,20 @@ import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface CodeMapper {
-  long countGroups();
-  List<CodeGroup> findGroupPage(@Param("limit") int limit, @Param("offset") int offset);
-  List<CodeGroup> findAllGroups();
+  long countGroups(@Param("tenantId") Long tenantId);
+  List<CodeGroup> findGroupPage(@Param("tenantId") Long tenantId,
+      @Param("limit") int limit, @Param("offset") int offset);
+  List<CodeGroup> findAllGroups(@Param("tenantId") Long tenantId);
 
   void insertGroup(CodeGroupCreateCommand cmd);
   void updateGroup(CodeGroupUpdateCommand cmd);
-  void deleteGroup(@Param("groupKey") String groupKey);
+  void deleteGroup(@Param("tenantId") Long tenantId, @Param("groupKey") String groupKey);
 
-  List<CodeItem> findCodesByGroup(@Param("groupKey") String groupKey);
+  List<CodeItem> findCodesByGroup(@Param("tenantId") Long tenantId,
+      @Param("groupKey") String groupKey);
 
   void insertCode(CodeCreateCommand cmd);
   void updateCode(CodeUpdateCommand cmd);
-  void deleteCode(@Param("groupKey") String groupKey, @Param("code") String code);
+  void deleteCode(@Param("tenantId") Long tenantId,
+      @Param("groupKey") String groupKey, @Param("code") String code);
 }

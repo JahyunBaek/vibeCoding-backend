@@ -5,41 +5,53 @@
 <mapper namespace="com.example.commonsystem.org.mapper.OrgMapper">
 
   <select id="findAll" resultType="com.example.commonsystem.org.domain.Org">
-    SELECT org_id AS orgId,
-           parent_id AS parentId,
+    SELECT org_id     AS orgId,
+           parent_id  AS parentId,
            name,
            sort_order AS sortOrder,
-           use_yn AS useYn
+           use_yn     AS useYn
       FROM orgs
+     WHERE 1=1
+    <if test="tenantId != null">
+       AND tenant_id = #{tenantId}
+    </if>
      ORDER BY parent_id NULLS FIRST, sort_order ASC, org_id ASC
   </select>
 
   <select id="count" resultType="long">
     SELECT COUNT(*) FROM orgs
+     WHERE 1=1
+    <if test="tenantId != null">
+       AND tenant_id = #{tenantId}
+    </if>
   </select>
 
   <select id="findPage" resultType="com.example.commonsystem.org.domain.Org">
-    SELECT org_id AS orgId,
-           parent_id AS parentId,
+    SELECT org_id     AS orgId,
+           parent_id  AS parentId,
            name,
            sort_order AS sortOrder,
-           use_yn AS useYn
+           use_yn     AS useYn
       FROM orgs
+     WHERE 1=1
+    <if test="tenantId != null">
+       AND tenant_id = #{tenantId}
+    </if>
      ORDER BY org_id DESC
      LIMIT #{limit} OFFSET #{offset}
   </select>
 
   <insert id="insert" parameterType="com.example.commonsystem.org.dto.OrgCreateCommand">
-    INSERT INTO orgs(parent_id, name, sort_order, use_yn)
-    VALUES(#{parentId}, #{name}, #{sortOrder}, #{useYn})
+    INSERT INTO orgs(parent_id, name, sort_order, use_yn, tenant_id)
+    VALUES(#{parentId}, #{name}, #{sortOrder}, #{useYn}, #{tenantId})
   </insert>
 
   <update id="update" parameterType="com.example.commonsystem.org.dto.OrgUpdateCommand">
     UPDATE orgs
-       SET parent_id = #{parentId},
-           name = #{name},
+       SET parent_id  = #{parentId},
+           name       = #{name},
            sort_order = #{sortOrder},
-           use_yn = #{useYn}
+           use_yn     = #{useYn}
      WHERE org_id = #{orgId}
   </update>
 

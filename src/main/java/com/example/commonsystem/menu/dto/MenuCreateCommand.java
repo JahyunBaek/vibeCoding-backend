@@ -9,21 +9,29 @@ public class MenuCreateCommand {
   private boolean useYn;
   private String menuType;
   private Long boardId;
+  private Long tenantId;
 
-  // filled by MyBatis if useGeneratedKeys works
+  // filled by MyBatis useGeneratedKeys
   private Long menuId;
 
   public MenuCreateCommand() {}
 
-  public MenuCreateCommand(Long parentId, String name, String path, String icon, int sortOrder, boolean useYn, String menuType, Long boardId) {
-    this.parentId = parentId;
-    this.name = name;
-    this.path = path;
-    this.icon = icon;
+  public MenuCreateCommand(Long parentId, String name, String path, String icon,
+      int sortOrder, boolean useYn, String menuType, Long boardId) {
+    this(parentId, name, path, icon, sortOrder, useYn, menuType, boardId, null);
+  }
+
+  public MenuCreateCommand(Long parentId, String name, String path, String icon,
+      int sortOrder, boolean useYn, String menuType, Long boardId, Long tenantId) {
+    this.parentId  = parentId;
+    this.name      = name;
+    this.path      = path;
+    this.icon      = icon;
     this.sortOrder = sortOrder;
-    this.useYn = useYn;
-    this.menuType = menuType;
-    this.boardId = boardId;
+    this.useYn     = useYn;
+    this.menuType  = menuType;
+    this.boardId   = boardId;
+    this.tenantId  = tenantId;
   }
 
   public Long getParentId() { return parentId; }
@@ -49,6 +57,9 @@ public class MenuCreateCommand {
 
   public Long getBoardId() { return boardId; }
   public void setBoardId(Long boardId) { this.boardId = boardId; }
+
+  public Long getTenantId() { return tenantId; }
+  public void setTenantId(Long tenantId) { this.tenantId = tenantId; }
 
   public Long getMenuId() { return menuId; }
   public void setMenuId(Long menuId) { this.menuId = menuId; }

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.commonsystem.audit.mapper.AuditLogMapper">
+
+  <insert id="insert">
+    INSERT INTO audit_logs (tenant_id, user_id, username, action, target_type, target_id, detail, ip_address)
+    VALUES (#{tenantId}, #{userId}, #{username}, #{action}, #{targetType}, #{targetId}, #{detail}, #{ipAddress})
+  </insert>
+
+  <select id="count" resultType="long">
+    SELECT COUNT(*) FROM audit_logs
+    <where>
+      <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
+      <if test="action != null and action != ''">AND action = #{action}</if>
+      <if test="targetType != null and targetType != ''">AND target_type = #{targetType}</if>
+    </where>
+  </select>
+
+  <select id="findPage" resultType="com.example.commonsystem.audit.domain.AuditLog">
+    SELECT log_id      AS logId,
+           tenant_id   AS tenantId,
+           user_id     AS userId,
+           username,
+           action,
+           target_type AS targetType,
+           target_id   AS targetId,
+           detail,
+           ip_address  AS ipAddress,
+           created_at  AS createdAt
+      FROM audit_logs
+    <where>
+      <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
+      <if test="action != null and action != ''">AND action = #{action}</if>
+      <if test="targetType != null and targetType != ''">AND target_type = #{targetType}</if>
+    </where>
+     ORDER BY created_at DESC
+     LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+</mapper>

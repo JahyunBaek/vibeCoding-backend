@@ -6,5 +6,6 @@ public record UserCreateCommand(
     String name,
     String roleKey,
     Long orgId,
+    Long tenantId,
     boolean enabled
 ) {}

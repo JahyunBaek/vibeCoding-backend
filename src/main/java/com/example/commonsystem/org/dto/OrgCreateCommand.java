@@ -4,5 +4,6 @@ public record OrgCreateCommand(
     Long parentId,
     String name,
     int sortOrder,
-    boolean useYn
+    boolean useYn,
+    Long tenantId
 ) {}

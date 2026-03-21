@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/admin/menus")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
 public class AdminMenuController {
 
   private final MenuService menuService;
@@ -22,8 +22,8 @@ public class AdminMenuController {
   }
 
   @GetMapping("/tree")
-  public ApiResponse<List<MenuNode>> tree() {
-    return ApiResponse.ok(menuService.getAllMenuTree());
+  public ApiResponse<List<MenuNode>> tree(@RequestParam(required = false) Long tenantId) {
+    return ApiResponse.ok(menuService.getAllMenuTree(tenantId));
   }
 
   public record CreateMenuRequest(
@@ -35,7 +35,8 @@ public class AdminMenuController {
       Boolean useYn,
       String menuType,
       Long boardId,
-      List<String> roleKeys
+      List<String> roleKeys,
+      Long tenantId
   ) {}
 
   @PostMapping
@@ -48,7 +49,8 @@ public class AdminMenuController {
         req.sortOrder() == null ? 0 : req.sortOrder(),
         req.useYn() == null || req.useYn(),
         req.menuType() == null ? "MENU" : req.menuType(),
-        req.boardId()
+        req.boardId(),
+        req.tenantId()
     );
     long id = menuService.create(cmd, req.roleKeys());
     return ApiResponse.ok(id);

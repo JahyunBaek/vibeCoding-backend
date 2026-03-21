@@ -27,14 +27,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
   public JwtAuthFilter(JwtService jwtService) {
     this.jwtService = jwtService;
   }
+
   @Override
   protected boolean shouldNotFilter(HttpServletRequest request) {
-    log.info("shouldNotFilter: {}", request.getRequestURI());
     return request.getRequestURI().equals("/api/auth/refresh");
   }
+
   @Override
-  protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-      throws ServletException, IOException {
+  protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+      FilterChain filterChain) throws ServletException, IOException {
 
     String auth = request.getHeader("Authorization");
     if (auth != null && auth.startsWith("Bearer ")) {
@@ -42,21 +43,24 @@ public class JwtAuthFilter extends OncePerRequestFilter {
       try {
         Claims claims = jwtService.parse(token);
         String username = claims.getSubject();
-        long userId = ((Number) claims.get("uid")).longValue();
-        String role = (String) claims.get("role");
-        String name = (String) claims.get("name");
-        Object orgIdObj = claims.get("orgId");
-        Long orgId = orgIdObj == null ? null : ((Number) orgIdObj).longValue();
+        long userId    = ((Number) claims.get("uid")).longValue();
+        String role    = (String) claims.get("role");
+        String name    = (String) claims.get("name");
+        Object orgIdObj    = claims.get("orgId");
+        Object tenantIdObj = claims.get("tid");
+        Long orgId    = orgIdObj    == null ? null : ((Number) orgIdObj).longValue();
+        Long tenantId = tenantIdObj == null ? null : ((Number) tenantIdObj).longValue();
 
-        UserPrincipal principal = new UserPrincipal(userId, username, "", role, name, orgId, true);
-        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-            principal, null, principal.getAuthorities());
+        UserPrincipal principal = new UserPrincipal(
+            userId, username, "", role, name, orgId, tenantId, true);
+        UsernamePasswordAuthenticationToken authentication =
+            new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         SecurityContextHolder.getContext().setAuthentication(authentication);
       } catch (JwtException e) {
-        log.warn("JWT expired", e);
+        log.warn("JWT expired or invalid", e);
         SecurityContextHolder.clearContext();
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setHeader(HttpHeaders.WWW_AUTHENTICATE,
             "Bearer error=\"invalid_token\", error_description=\"expired\"");
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);

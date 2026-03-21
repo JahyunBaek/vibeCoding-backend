@@ -20,7 +20,11 @@ public class JwtService {
     this.key = Keys.hmacShaKeyFor(props.secret().getBytes(StandardCharsets.UTF_8));
   }
 
-  public String createAccessToken(long userId, String username, String roleKey, String name, Long orgId) {
+  /**
+   * @param tenantId null = SUPER_ADMIN (시스템 레벨 사용자)
+   */
+  public String createAccessToken(long userId, String username, String roleKey,
+      String name, Long orgId, Long tenantId) {
     Instant now = Instant.now();
     Instant exp = now.plusSeconds(props.accessTokenMinutes() * 60L);
 
@@ -30,6 +34,7 @@ public class JwtService {
         .claim("role", roleKey)
         .claim("name", name)
         .claim("orgId", orgId)
+        .claim("tid", tenantId)   // tenantId: null이면 SUPER_ADMIN
         .issuedAt(Date.from(now))
         .expiration(Date.from(exp))
         .signWith(key)

@@ -5,12 +5,13 @@
 <mapper namespace="com.example.commonsystem.user.mapper.UserMapper">
 
   <select id="findByUsername" parameterType="string" resultType="com.example.commonsystem.user.domain.User">
-    SELECT user_id AS userId,
+    SELECT user_id        AS userId,
            username,
-           password_hash AS passwordHash,
+           password_hash  AS passwordHash,
            name,
-           role_key AS roleKey,
-           org_id AS orgId,
+           role_key       AS roleKey,
+           org_id         AS orgId,
+           tenant_id      AS tenantId,
            enabled
       FROM users
      WHERE username = #{username}
@@ -18,12 +19,13 @@
   </select>
 
   <select id="findById" parameterType="long" resultType="com.example.commonsystem.user.domain.User">
-    SELECT user_id AS userId,
+    SELECT user_id        AS userId,
            username,
-           password_hash AS passwordHash,
+           password_hash  AS passwordHash,
            name,
-           role_key AS roleKey,
-           org_id AS orgId,
+           role_key       AS roleKey,
+           org_id         AS orgId,
+           tenant_id      AS tenantId,
            enabled
       FROM users
      WHERE user_id = #{userId}
@@ -34,20 +36,26 @@
     SELECT COUNT(*)
       FROM users
      WHERE 1=1
+    <if test="tenantId != null">
+       AND tenant_id = #{tenantId}
+    </if>
     <if test="orgId != null">
        AND org_id = #{orgId}
     </if>
   </select>
 
   <select id="findPage" resultType="com.example.commonsystem.user.dto.UserListRow">
-    SELECT user_id AS userId,
+    SELECT user_id   AS userId,
            username,
            name,
-           role_key AS roleKey,
-           org_id AS orgId,
+           role_key  AS roleKey,
+           org_id    AS orgId,
            enabled
       FROM users
      WHERE 1=1
+    <if test="tenantId != null">
+       AND tenant_id = #{tenantId}
+    </if>
     <if test="orgId != null">
        AND org_id = #{orgId}
     </if>
@@ -56,18 +64,18 @@
   </select>
 
   <insert id="insert" parameterType="com.example.commonsystem.user.dto.UserCreateCommand">
-    INSERT INTO users(username, password_hash, name, role_key, org_id, enabled)
-    VALUES(#{username}, #{passwordHash}, #{name}, #{roleKey}, #{orgId}, #{enabled})
+    INSERT INTO users(username, password_hash, name, role_key, org_id, tenant_id, enabled)
+    VALUES(#{username}, #{passwordHash}, #{name}, #{roleKey}, #{orgId}, #{tenantId}, #{enabled})
   </insert>
 
   <update id="update" parameterType="com.example.commonsystem.user.dto.UserUpdateCommand">
     UPDATE users
        SET password_hash = COALESCE(#{passwordHash}, password_hash),
-           name = COALESCE(#{name}, name),
-           role_key = COALESCE(#{roleKey}, role_key),
-           org_id = #{orgId},
-           enabled = #{enabled},
-           updated_at = NOW()
+           name          = COALESCE(#{name}, name),
+           role_key      = COALESCE(#{roleKey}, role_key),
+           org_id        = #{orgId},
+           enabled       = #{enabled},
+           updated_at    = NOW()
      WHERE user_id = #{userId}
   </update>
 

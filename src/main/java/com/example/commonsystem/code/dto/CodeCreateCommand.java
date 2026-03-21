@@ -6,5 +6,6 @@ public record CodeCreateCommand(
     String name,
     String value,
     int sortOrder,
-    boolean useYn
+    boolean useYn,
+    Long tenantId
 ) {}

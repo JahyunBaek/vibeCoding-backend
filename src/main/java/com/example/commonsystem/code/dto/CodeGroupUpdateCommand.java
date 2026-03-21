@@ -3,5 +3,6 @@ package com.example.commonsystem.code.dto;
 public record CodeGroupUpdateCommand(
     String groupKey,
     String groupName,
-    boolean useYn
+    boolean useYn,
+    Long tenantId
 ) {}

@@ -19,6 +19,7 @@ public class AuthDtos {
       String username,
       String name,
       String roleKey,
-      Long orgId
+      Long orgId,
+      Long tenantId   // null = SUPER_ADMIN
   ) {}
 }

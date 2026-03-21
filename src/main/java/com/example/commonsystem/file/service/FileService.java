@@ -1,6 +1,7 @@
 package com.example.commonsystem.file.service;
 
 import com.example.commonsystem.common.ErrorCode;
+import com.example.commonsystem.common.TenantContextHolder;
 import com.example.commonsystem.common.exception.AppException;
 import com.example.commonsystem.file.domain.StoredFile;
 import com.example.commonsystem.file.dto.FileCreateCommand;
@@ -23,12 +24,14 @@ import org.springframework.web.multipart.MultipartFile;
 public class FileService {
 
   private final FileMapper fileMapper;
+  private final TenantContextHolder tenantCtx;
 
   @Value("${app.file-storage-path:./storage}")
   private String baseDir;
 
-  public FileService(FileMapper fileMapper) {
+  public FileService(FileMapper fileMapper, TenantContextHolder tenantCtx) {
     this.fileMapper = fileMapper;
+    this.tenantCtx = tenantCtx;
   }
 
   // ─── 일반 첨부파일 저장 ──────────────────────────────────────────
@@ -59,7 +62,7 @@ public class FileService {
     }
 
     FileCreateCommand cmd = new FileCreateCommand(
-        original, saved, file.getContentType(), file.getSize(), dir.toString()
+        original, saved, file.getContentType(), file.getSize(), dir.toString(), tenantCtx.currentTenantId()
     );
     fileMapper.insert(cmd);
 
@@ -123,7 +126,7 @@ public class FileService {
     long sizeBytes = 0;
     try { sizeBytes = Files.size(full); } catch (IOException ignored) {}
 
-    FileCreateCommand cmd = new FileCreateCommand(original, savedName, contentType, sizeBytes, dir.toString());
+    FileCreateCommand cmd = new FileCreateCommand(original, savedName, contentType, sizeBytes, dir.toString(), tenantCtx.currentTenantId());
     fileMapper.insert(cmd);
 
     return "/" + relDir + "/" + savedName;

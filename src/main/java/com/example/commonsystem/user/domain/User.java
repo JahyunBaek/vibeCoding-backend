@@ -7,5 +7,6 @@ public record User(
     String name,
     String roleKey,
     Long orgId,
+    Long tenantId,   // null = SUPER_ADMIN
     boolean enabled
 ) {}

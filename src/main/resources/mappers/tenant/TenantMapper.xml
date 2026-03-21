@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.commonsystem.tenant.mapper.TenantMapper">
+
+  <select id="count" resultType="long">
+    SELECT COUNT(*) FROM tenants WHERE tenant_id > 0
+  </select>
+
+  <select id="findPage" resultType="com.example.commonsystem.tenant.dto.TenantListRow">
+    SELECT t.tenant_id   AS tenantId,
+           t.tenant_key  AS tenantKey,
+           t.tenant_name AS tenantName,
+           t.plan_type   AS planType,
+           t.active,
+           COALESCE((SELECT COUNT(*) FROM users u WHERE u.tenant_id = t.tenant_id), 0) AS userCount,
+           t.created_at  AS createdAt
+      FROM tenants t
+     WHERE t.tenant_id > 0
+     ORDER BY t.tenant_id DESC
+     LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+  <select id="findAll" resultType="com.example.commonsystem.tenant.dto.TenantListRow">
+    SELECT t.tenant_id   AS tenantId,
+           t.tenant_key  AS tenantKey,
+           t.tenant_name AS tenantName,
+           t.plan_type   AS planType,
+           t.active,
+           COALESCE((SELECT COUNT(*) FROM users u WHERE u.tenant_id = t.tenant_id), 0) AS userCount,
+           t.created_at  AS createdAt
+      FROM tenants t
+     WHERE t.tenant_id > 0
+     ORDER BY t.tenant_id DESC
+  </select>
+
+  <select id="findById" resultType="com.example.commonsystem.tenant.domain.Tenant">
+    SELECT tenant_id   AS tenantId,
+           tenant_key  AS tenantKey,
+           tenant_name AS tenantName,
+           plan_type   AS planType,
+           active,
+           created_at  AS createdAt
+      FROM tenants
+     WHERE tenant_id = #{tenantId}
+  </select>
+
+  <insert id="insert" parameterType="com.example.commonsystem.tenant.dto.TenantCreateCommand"
+          useGeneratedKeys="true" keyProperty="tenantId" keyColumn="tenant_id">
+    INSERT INTO tenants (tenant_key, tenant_name, plan_type, active)
+    VALUES (#{tenantKey}, #{tenantName}, #{planType}, #{active})
+  </insert>
+
+  <update id="update" parameterType="com.example.commonsystem.tenant.dto.TenantUpdateCommand">
+    UPDATE tenants
+       SET tenant_name = #{tenantName},
+           plan_type   = #{planType},
+           active      = #{active},
+           updated_at  = NOW()
+     WHERE tenant_id = #{tenantId}
+  </update>
+
+  <delete id="delete">
+    DELETE FROM tenants WHERE tenant_id = #{tenantId}
+  </delete>
+
+  <!-- Tenant 생성 시 초기 메뉴/게시판/코드 Provisioning -->
+  <insert id="insertMenu">
+    INSERT INTO menus (menu_id, parent_id, name, path, icon, sort_order, use_yn, menu_type, board_id, tenant_id)
+    VALUES (#{menuId}, #{parentId}, #{name}, #{path}, #{icon}, #{sortOrder}, TRUE, #{menuType}, #{boardId}, #{tenantId})
+    ON CONFLICT (menu_id) DO NOTHING
+  </insert>
+
+  <insert id="insertMenuRole">
+    INSERT INTO menu_roles (menu_id, role_key) VALUES (#{menuId}, #{roleKey})
+    ON CONFLICT DO NOTHING
+  </insert>
+
+  <insert id="insertBoard">
+    INSERT INTO boards (board_id, name, description, use_yn, tenant_id)
+    VALUES (#{boardId}, #{name}, #{description}, TRUE, #{tenantId})
+    ON CONFLICT (board_id) DO NOTHING
+  </insert>
+
+  <!-- 테넌트의 ADMIN/USER role에 모든 기본 action 부여 -->
+  <insert id="insertRoleActions">
+    INSERT INTO role_actions (tenant_id, role_key, action_id)
+    SELECT #{tenantId}, #{roleKey}, action_id FROM screen_actions
+    ON CONFLICT DO NOTHING
+  </insert>
+
+  <insert id="insertCodeGroup">
+    INSERT INTO code_groups (group_key, group_name, use_yn, tenant_id)
+    VALUES (#{groupKey}, #{groupName}, TRUE, #{tenantId})
+    ON CONFLICT DO NOTHING
+  </insert>
+
+  <insert id="insertCode">
+    INSERT INTO codes (group_key, code, name, value, sort_order, use_yn, tenant_id)
+    VALUES (#{groupKey}, #{code}, #{name}, #{value}, #{sortOrder}, TRUE, #{tenantId})
+    ON CONFLICT DO NOTHING
+  </insert>
+
+  <insert id="insertUser">
+    INSERT INTO users (username, password_hash, name, role_key, org_id, tenant_id, enabled)
+    VALUES (#{username}, #{passwordHash}, #{name}, #{roleKey}, NULL, #{tenantId}, TRUE)
+    ON CONFLICT (username) DO NOTHING
+  </insert>
+
+  <select id="getMenuIdSeqNext" resultType="long">
+    SELECT nextval(pg_get_serial_sequence('menus', 'menu_id'))
+  </select>
+
+  <select id="getBoardIdSeqNext" resultType="long">
+    SELECT nextval(pg_get_serial_sequence('boards', 'board_id'))
+  </select>
+
+</mapper>

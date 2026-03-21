@@ -18,8 +18,8 @@
   </select>
 
   <insert id="insert" parameterType="com.example.commonsystem.file.dto.FileCreateCommand" useGeneratedKeys="true" keyProperty="fileId" keyColumn="file_id">
-    INSERT INTO files(original_name, saved_name, content_type, size_bytes, storage_path)
-    VALUES(#{originalName}, #{savedName}, #{contentType}, #{sizeBytes}, #{storagePath})
+    INSERT INTO files(original_name, saved_name, content_type, size_bytes, storage_path, tenant_id)
+    VALUES(#{originalName}, #{savedName}, #{contentType}, #{sizeBytes}, #{storagePath}, #{tenantId})
   </insert>
 
   <delete id="deleteById">

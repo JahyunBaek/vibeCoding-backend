@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/admin/users")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
 public class AdminUserController {
 
   private final UserService userService;
@@ -22,9 +22,10 @@ public class AdminUserController {
   public ApiResponse<PageResponse<UserListRow>> list(
       @RequestParam(required = false) Long orgId,
       @RequestParam(defaultValue = "1") int page,
-      @RequestParam(defaultValue = "20") int size
+      @RequestParam(defaultValue = "20") int size,
+      @RequestParam(required = false) Long tenantId
   ) {
-    return ApiResponse.ok(userService.page(orgId, page, size));
+    return ApiResponse.ok(userService.page(orgId, page, size, tenantId));
   }
 
   public record CreateUserRequest(
@@ -33,12 +34,13 @@ public class AdminUserController {
       String name,
       String roleKey,
       Long orgId,
-      Boolean enabled
+      Boolean enabled,
+      Long tenantId
   ) {}
 
   @PostMapping
   public ApiResponse<Void> create(@RequestBody CreateUserRequest req) {
-    userService.create(req.username(), req.password(), req.name(), req.roleKey(), req.orgId(), req.enabled() == null || req.enabled());
+    userService.create(req.username(), req.password(), req.name(), req.roleKey(), req.orgId(), req.enabled() == null || req.enabled(), req.tenantId());
     return ApiResponse.ok();
   }
 
@@ -53,6 +55,14 @@ public class AdminUserController {
   @PutMapping("/{userId}")
   public ApiResponse<Void> update(@PathVariable long userId, @RequestBody UpdateUserRequest req) {
     userService.update(userId, req.name(), req.password(), req.roleKey(), req.orgId(), req.enabled() == null || req.enabled());
+    return ApiResponse.ok();
+  }
+
+  public record ResetPasswordRequest(String newPassword) {}
+
+  @PatchMapping("/{userId}/password")
+  public ApiResponse<Void> resetPassword(@PathVariable long userId, @RequestBody ResetPasswordRequest req) {
+    userService.adminResetPassword(userId, req.newPassword());
     return ApiResponse.ok();
   }
 

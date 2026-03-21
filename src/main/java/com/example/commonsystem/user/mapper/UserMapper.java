@@ -13,8 +13,9 @@ public interface UserMapper {
   User findByUsername(@Param("username") String username);
   User findById(@Param("userId") long userId);
 
-  long count(@Param("orgId") Long orgId);
-  List<UserListRow> findPage(@Param("orgId") Long orgId, @Param("limit") int limit, @Param("offset") int offset);
+  long count(@Param("tenantId") Long tenantId, @Param("orgId") Long orgId);
+  List<UserListRow> findPage(@Param("tenantId") Long tenantId, @Param("orgId") Long orgId,
+      @Param("limit") int limit, @Param("offset") int offset);
 
   void insert(UserCreateCommand cmd);
   void update(UserUpdateCommand cmd);
