@@ -1,40 +1,40 @@
 server:
-  port: 8888
+  port: ${SERVER_PORT:8888}
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/postgres?currentSchema=testdb
-    username: postgres
-    password: "1"
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:appdb}?currentSchema=${DB_SCHEMA:testdb}
+    username: ${DB_USER:app}
+    password: ${DB_PASSWORD:app1234!}
     driver-class-name: org.postgresql.Driver
-    hikari:
-      # Ensure all connections use the same schema as Flyway migrations.
-      connection-init-sql: SET search_path TO testdb;
+
   flyway:
     enabled: true
+    create-schemas: true
+    schemas: ${DB_SCHEMA:testdb}
+    default-schema: ${DB_SCHEMA:testdb}
     locations: classpath:db/migration
-    default-schema: testdb
+
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000
+
   servlet:
     multipart:
-      enabled: true
       max-file-size: 50MB
-      max-request-size: 100MB
+      max-request-size: 60MB
 
 mybatis:
-  mapper-locations: classpath:mappers/**/*.xml
+  mapper-locations: classpath:/mappers/**/*.xml
   configuration:
     map-underscore-to-camel-case: true
-    default-fetch-size: 100
-    default-statement-timeout: 30
 
-# JWT & Security settings
 app:
   jwt:
-    secret: local-dev-secret-key-must-be-at-least-256bits-long-change-in-prod
+    secret: ${JWT_SECRET:change-me-super-secret-key-at-least-32-bytes}
     access-token-minutes: 5
     refresh-token-minutes: 60
   security:
@@ -42,19 +42,15 @@ app:
     refresh-cookie-path: /api/auth
     refresh-cookie-samesite: Lax
     refresh-cookie-secure: false
-  file-storage-path: ./storage
-  base-url: http://localhost:8888
+  file-storage-path: ${FILE_STORAGE_PATH:C:/storage}
 
-# p6spy: log SQL with bind variables replaced (so it won't show only '?' placeholders).
 decorator:
   datasource:
+    enabled: true
     p6spy:
       enable-logging: true
       logging: slf4j
-      multiline: false
-      log-format: "%(currentTime)|%(executionTime)|%(category)|connection%(connectionId)|%(sqlSingleLine)"
-
-logging:
-  level:
-    com.example.commonsystem: DEBUG
-    org.springframework.security: DEBUG
+      multiline: true  # SQL 자체는 여러 줄로 두고 싶으면 유지
+      log-format: "#%(currentTime) | took %(executionTime)ms | %(category) | connection %(connectionId)\n%(sql)"
+      tracing:
+        include-parameter-values: true
