@@ -57,6 +57,11 @@ public class UserService {
     userMapper.update(new UserUpdateCommand(userId, hash, name, null, current.orgId(), current.enabled()));
   }
 
+  public List<UserListRow> listAll(Long tenantIdOverride) {
+    Long tenantId = tenantCtx.resolveTenantId(tenantIdOverride);
+    return userMapper.findPage(tenantId, null, 100000, 0);
+  }
+
   public PageResponse<UserListRow> page(Long orgId, int page, int size, Long tenantIdOverride) {
     int p = Math.max(page, 1);
     int s = Math.min(Math.max(size, 1), 100);
@@ -91,6 +96,17 @@ public class UserService {
     }
     String hash = (password == null || password.isBlank()) ? null : passwordEncoder.encode(password);
     userMapper.update(new UserUpdateCommand(userId, hash, name, roleKey, orgId, enabled));
+  }
+
+  @Transactional
+  public void resetPasswordByToken(long userId, String newPassword) {
+    User target = userMapper.findById(userId);
+    if (target == null) throw new AppException(ErrorCode.NOT_FOUND, "사용자를 찾을 수 없습니다.");
+    if (newPassword == null || newPassword.length() < 8) {
+      throw new AppException(ErrorCode.VALIDATION, "새 비밀번호는 8자 이상이어야 합니다.");
+    }
+    String hash = passwordEncoder.encode(newPassword);
+    userMapper.update(new UserUpdateCommand(userId, hash, target.name(), target.roleKey(), target.orgId(), target.enabled()));
   }
 
   @Transactional

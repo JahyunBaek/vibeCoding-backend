@@ -37,6 +37,11 @@ public class AuditService {
     auditLogMapper.insert(tenantId, userId, username, action, targetType, targetId, detail, clientIp());
   }
 
+  public List<AuditLog> listAll(Long tenantIdOverride, String action, String targetType) {
+    Long tenantId = resolveForQuery(tenantIdOverride);
+    return auditLogMapper.findPage(tenantId, action, targetType, 100000, 0);
+  }
+
   public PageResponse<AuditLog> page(Long tenantIdOverride, String action, String targetType,
       int page, int size) {
     int p = Math.max(page, 1);

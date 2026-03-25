@@ -9,5 +9,8 @@ import org.apache.ibatis.annotations.Param;
 @Mapper
 public interface CommentMapper {
   List<Comment> findByPost(@Param("postId") long postId);
+  Comment findById(@Param("commentId") long commentId);
   void insert(CommentCreateCommand cmd);
+  void update(@Param("commentId") long commentId, @Param("content") String content);
+  void delete(@Param("commentId") long commentId);
 }

@@ -5,10 +5,10 @@
 <mapper namespace="com.example.commonsystem.board.mapper.PostMapper">
 
   <select id="countByBoard" resultType="long">
-    SELECT COUNT(*) FROM posts
-     WHERE board_id = #{boardId}
+    SELECT COUNT(*) FROM posts p
+     WHERE p.board_id = #{boardId}
     <if test="search != null and search != ''">
-       AND title LIKE CONCAT('%', #{search}, '%')
+       AND (p.title ILIKE '%' || #{search} || '%' OR p.content ILIKE '%' || #{search} || '%')
     </if>
   </select>
 
@@ -22,7 +22,7 @@
       JOIN users u ON u.user_id = p.author_id
      WHERE p.board_id = #{boardId}
     <if test="search != null and search != ''">
-       AND p.title LIKE CONCAT('%', #{search}, '%')
+       AND (p.title ILIKE '%' || #{search} || '%' OR p.content ILIKE '%' || #{search} || '%')
     </if>
      ORDER BY p.post_id DESC
      LIMIT #{limit} OFFSET #{offset}

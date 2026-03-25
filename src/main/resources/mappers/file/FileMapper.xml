@@ -26,4 +26,21 @@
     DELETE FROM files WHERE file_id = #{fileId}
   </delete>
 
+  <select id="findOrphans" resultType="com.example.commonsystem.file.domain.StoredFile">
+    SELECT f.file_id AS fileId,
+           f.original_name AS originalName,
+           f.saved_name AS savedName,
+           f.content_type AS contentType,
+           f.size_bytes AS sizeBytes,
+           f.storage_path AS storagePath,
+           f.created_at AS createdAt
+      FROM files f
+      LEFT JOIN post_files pf ON pf.file_id = f.file_id
+     WHERE pf.file_id IS NULL
+       AND f.storage_path NOT LIKE '%images/board%'
+       AND f.created_at &lt; NOW() - INTERVAL '${olderThanHours} hours'
+     ORDER BY f.file_id
+     LIMIT #{limit}
+  </select>
+
 </mapper>

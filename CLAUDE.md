@@ -39,7 +39,7 @@ Controllers → Services → Mappers (MyBatis) → PostgreSQL
 
 | Package | Purpose |
 |---------|---------|
-| `auth/` | Login, refresh, logout |
+| `auth/` | Login, refresh, logout, password reset |
 | `security/` | JWT (`JwtService`), filter (`JwtAuthFilter`), `UserPrincipal` |
 | `user/` | User CRUD + profile (`/api/me`) |
 | `role/` | Role management |
@@ -50,8 +50,8 @@ Controllers → Services → Mappers (MyBatis) → PostgreSQL
 | `code/` | Common code groups/items (dropdown data, cached in Redis) |
 | `tenant/` | Tenant CRUD + provisioning (SUPER_ADMIN only) |
 | `dashboard/` | Summary stats |
-| `common/` | `ApiResponse<T>`, `PageResponse<T>`, `AppException`, `GlobalExceptionHandler`, `ErrorCode`, `TenantContextHolder` |
-| `config/` | `SecurityConfig`, `RedisConfig`, `WebMvcConfig`, etc. |
+| `common/` | `ApiResponse<T>`, `PageResponse<T>`, `AppException`, `GlobalExceptionHandler`, `ErrorCode`, `TenantContextHolder`, `RateLimitService`, `CsvExportService` |
+| `config/` | `SecurityConfig`, `RedisConfig`, `WebMvcConfig`, `OpenApiConfig` |
 
 ### Authentication
 
@@ -60,12 +60,21 @@ Controllers → Services → Mappers (MyBatis) → PostgreSQL
 - **Token rotation**: each `/api/auth/refresh` call revokes the old token and issues a new pair
 - `JwtAuthFilter` extracts claims and populates `UserPrincipal` in the `SecurityContext`
 - Authorization uses `@PreAuthorize("hasRole('ADMIN')")` at the method level
+- **Rate Limiting**: 로그인 엔드포인트에 IP당 5분/10회 제한 (`RateLimitService`, Redis 기반)
+- **JWT Secret 경고**: 기본 시크릿 사용 시 시작 로그에 경고 출력. 프로덕션에서는 `JWT_SECRET` 환경변수 필수
+
+### 비밀번호 재설정
+
+- `PasswordResetService` — Redis에 `pwd-reset:{token}` → userId, 30분 TTL
+- `POST /api/auth/reset-password` — 공개 엔드포인트, 토큰+새비밀번호로 재설정
+- `POST /api/admin/users/{userId}/reset-token` — 관리자가 리셋 토큰 생성
 
 ### Database
 
-- **Flyway** runs `V1__init.sql` on startup — creates all tables and seeds roles, orgs, users, menus, boards, and common codes
+- **Flyway** `V1`~`V9` 마이그레이션 — 스키마, 권한, 멀티테넌시, 설정, 감사로그, 전문검색 인덱스
 - **MyBatis** `map-underscore-to-camel-case: true` — DB columns use `snake_case`, Java uses `camelCase`
-- Common codes are Redis-cached under `codes:{groupKey}` and invalidated on update
+- Common codes are Redis-cached under `codes:{tenantId}:{groupKey}` and invalidated on update
+- **전문 검색**: `posts` 테이블에 GIN 인덱스 (`V9`), 현재 제목+내용 ILIKE 검색
 
 ### Key Conventions
 
@@ -74,6 +83,10 @@ Controllers → Services → Mappers (MyBatis) → PostgreSQL
 - Admin endpoints are under `/api/admin/**`; user endpoints are `/api/**`; super-admin under `/api/super-admin/**`
 - When a new `Board` is created, the service automatically inserts a corresponding `Menu` entry of type `BOARD`
 - File metadata is stored in the `files` table; actual files go to the `storage/` directory; associations to posts via `post_files`
+- **입력 검증**: 모든 `@RequestBody`에 `@Valid` 적용, DTO에 `@NotBlank`/`@Size` 어노테이션. `GlobalExceptionHandler`가 필드별 에러 메시지 반환
+- **CSV 내보내기**: `CsvExportService` (UTF-8 BOM, Excel 호환). `GET /api/admin/users/export`, `GET /api/admin/audit/export`
+- **고아 파일 정리**: `OrphanFileCleanupJob` — 매일 새벽 3시, 24시간 이상 미연결 파일 삭제 (`@Scheduled`)
+- **Swagger/OpenAPI**: 모든 컨트롤러에 `@Tag`/`@Operation` 적용. UI: `/swagger-ui/index.html`
 
 ### 멀티테넌시 (SaaS)
 
@@ -95,4 +108,17 @@ Controllers → Services → Mappers (MyBatis) → PostgreSQL
 
 **캐시 키**: Redis 공통코드 캐시는 `codes:{tenantId}:{groupKey}` 형태로 테넌트별 분리.
 
-**DB 마이그레이션**: `V4__multi_tenant.sql` — tenants 테이블, 기존 테이블에 tenant_id 컬럼 추가, system tenant(0), default tenant(1), SUPER_ADMIN 시드.
+**테넌트 브랜딩**: `GET /api/tenant/branding` — 인증된 사용자의 테넌트에서 `company_name`, `logo_url` 반환.
+
+**DB 마이그레이션**:
+| Version | 내용 |
+|---------|------|
+| V1 | 초기 스키마 (roles, users, orgs, menus, boards, posts, comments, files, codes) |
+| V2 | Screens + Actions + Role-Action 매핑 |
+| V3 | ScreenActions 메뉴 추가 |
+| V4 | 멀티테넌시: tenant_id 컬럼, tenants 테이블, SUPER_ADMIN |
+| V5 | SUPER_ADMIN_TENANTS 화면/액션 |
+| V6 | SUPER_ADMIN 비밀번호 해시 수정 |
+| V7 | SUPER_ADMIN 시스템 메뉴 |
+| V8 | tenant_configs, audit_logs 테이블 |
+| V9 | 게시글 전문검색 GIN 인덱스 |

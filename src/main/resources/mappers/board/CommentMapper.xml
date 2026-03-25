@@ -17,9 +17,29 @@
      ORDER BY c.comment_id ASC
   </select>
 
+  <select id="findById" resultType="com.example.commonsystem.board.domain.Comment">
+    SELECT c.comment_id AS commentId,
+           c.post_id AS postId,
+           c.author_id AS authorId,
+           u.name AS authorName,
+           c.content,
+           c.created_at AS createdAt
+      FROM comments c
+      JOIN users u ON u.user_id = c.author_id
+     WHERE c.comment_id = #{commentId}
+  </select>
+
   <insert id="insert" parameterType="com.example.commonsystem.board.dto.CommentCreateCommand">
     INSERT INTO comments(post_id, author_id, content)
     VALUES(#{postId}, #{authorId}, #{content})
   </insert>
+
+  <update id="update">
+    UPDATE comments SET content = #{content} WHERE comment_id = #{commentId}
+  </update>
+
+  <delete id="delete">
+    DELETE FROM comments WHERE comment_id = #{commentId}
+  </delete>
 
 </mapper>

@@ -25,12 +25,22 @@ public class GlobalExceptionHandler {
         .body(ApiResponse.fail(e.getCode(), e.getMessage()));
   }
 
-  @ExceptionHandler({MethodArgumentNotValidException.class, BindException.class, ConstraintViolationException.class})
+  @ExceptionHandler(MethodArgumentNotValidException.class)
+  public ResponseEntity<ApiResponse<Void>> handleMethodArgumentNotValid(MethodArgumentNotValidException e) {
+    String message = e.getBindingResult().getFieldErrors().stream()
+        .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
+        .reduce((a, b) -> a + ", " + b)
+        .orElse("입력값 검증 오류");
+    log.warn("Validation error: {}", message);
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(ApiResponse.fail(ErrorCode.VALIDATION, message));
+  }
+
+  @ExceptionHandler({BindException.class, ConstraintViolationException.class})
   public ResponseEntity<ApiResponse<Void>> handleValidation(Exception e) {
-    // 검증 에러는 필요하면 자세히
     log.warn("Validation error", e);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-        .body(ApiResponse.fail(ErrorCode.VALIDATION, "Validation error"));
+        .body(ApiResponse.fail(ErrorCode.VALIDATION, "입력값 검증 오류"));
   }
 
   @ExceptionHandler(Exception.class)

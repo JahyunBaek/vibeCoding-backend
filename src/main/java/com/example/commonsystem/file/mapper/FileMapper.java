@@ -2,6 +2,7 @@ package com.example.commonsystem.file.mapper;
 
 import com.example.commonsystem.file.domain.StoredFile;
 import com.example.commonsystem.file.dto.FileCreateCommand;
+import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -10,4 +11,5 @@ public interface FileMapper {
   StoredFile findById(@Param("fileId") long fileId);
   void insert(FileCreateCommand cmd);
   void deleteById(@Param("fileId") long fileId);
+  List<StoredFile> findOrphans(@Param("olderThanHours") int olderThanHours, @Param("limit") int limit);
 }

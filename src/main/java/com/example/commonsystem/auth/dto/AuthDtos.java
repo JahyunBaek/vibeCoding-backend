@@ -1,6 +1,7 @@
 package com.example.commonsystem.auth.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 public class AuthDtos {
 
@@ -12,6 +13,16 @@ public class AuthDtos {
   public record TokenResponse(
       String accessToken,
       UserSummary user
+  ) {}
+
+  public record ResetPasswordRequest(
+      @NotBlank String token,
+      @NotBlank @Size(min = 8, max = 100) String newPassword
+  ) {}
+
+  public record ResetTokenResponse(
+      String token,
+      int expiresInMinutes
   ) {}
 
   public record UserSummary(

@@ -2,17 +2,24 @@ package com.example.commonsystem.auth.controller;
 
 import com.example.commonsystem.audit.service.AuditService;
 import com.example.commonsystem.auth.dto.AuthDtos.LoginRequest;
+import com.example.commonsystem.auth.dto.AuthDtos.ResetPasswordRequest;
 import com.example.commonsystem.auth.dto.AuthDtos.TokenResponse;
 import com.example.commonsystem.auth.dto.AuthDtos.UserSummary;
+import com.example.commonsystem.auth.service.PasswordResetService;
 import com.example.commonsystem.auth.service.RefreshTokenService;
 import com.example.commonsystem.common.ApiResponse;
 import com.example.commonsystem.common.ErrorCode;
+import com.example.commonsystem.common.RateLimitService;
 import com.example.commonsystem.security.JwtProperties;
 import com.example.commonsystem.security.JwtService;
 import com.example.commonsystem.security.SecurityProperties;
 import com.example.commonsystem.security.UserPrincipal;
 import com.example.commonsystem.user.domain.User;
 import com.example.commonsystem.user.mapper.UserMapper;
+import com.example.commonsystem.user.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +39,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "인증", description = "로그인, 토큰 갱신, 로그아웃, 비밀번호 재설정")
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/auth")
@@ -41,12 +49,23 @@ public class AuthController {
   private final JwtService jwtService;
   private final JwtProperties jwtProperties;
   private final SecurityProperties securityProperties;
+  private final PasswordResetService passwordResetService;
   private final RefreshTokenService refreshTokenService;
   private final UserMapper userMapper;
+  private final UserService userService;
   private final AuditService auditService;
+  private final RateLimitService rateLimitService;
 
+  @Operation(summary = "로그인")
   @PostMapping("/login")
-  public ResponseEntity<ApiResponse<TokenResponse>> login(@Valid @RequestBody LoginRequest req, HttpServletResponse res) {
+  public ResponseEntity<ApiResponse<TokenResponse>> login(
+      @Valid @RequestBody LoginRequest req, HttpServletRequest request, HttpServletResponse res) {
+    String clientIp = extractClientIp(request);
+    if (!rateLimitService.tryAcquire("login:" + clientIp, 10, Duration.ofMinutes(5))) {
+      return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+          .body(ApiResponse.fail(ErrorCode.VALIDATION, "로그인 시도가 너무 많습니다. 5분 후 다시 시도해주세요."));
+    }
+
     Authentication auth = authenticationManager.authenticate(
         new UsernamePasswordAuthenticationToken(req.username(), req.password())
     );
@@ -74,6 +93,7 @@ public class AuthController {
     return ResponseEntity.ok(ApiResponse.ok(body));
   }
 
+  @Operation(summary = "토큰 갱신")
   @PostMapping("/refresh")
   public ResponseEntity<ApiResponse<TokenResponse>> refresh(
       @CookieValue(name = "REFRESH_TOKEN", required = false) String refreshToken,
@@ -115,6 +135,7 @@ public class AuthController {
     return ResponseEntity.ok(ApiResponse.ok(body));
   }
 
+  @Operation(summary = "로그아웃")
   @PostMapping("/logout")
   public ResponseEntity<ApiResponse<Void>> logout(
       @CookieValue(name = "REFRESH_TOKEN", required = false) String refreshToken,
@@ -130,6 +151,20 @@ public class AuthController {
     return ResponseEntity.ok(ApiResponse.ok());
   }
 
+  @Operation(summary = "비밀번호 재설정")
+  @PostMapping("/reset-password")
+  public ResponseEntity<ApiResponse<Void>> resetPassword(
+      @Valid @RequestBody ResetPasswordRequest req
+  ) {
+    Long userId = passwordResetService.validateAndGetUserId(req.token());
+    if (userId == null) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(ApiResponse.fail(ErrorCode.VALIDATION, "유효하지 않거나 만료된 재설정 토큰입니다."));
+    }
+    userService.resetPasswordByToken(userId, req.newPassword());
+    return ResponseEntity.ok(ApiResponse.ok());
+  }
+
   private void setRefreshCookie(HttpServletResponse res, String token, Duration ttl) {
     ResponseCookie cookie = ResponseCookie.from(securityProperties.refreshCookieName(), token)
         .httpOnly(true)
@@ -139,6 +174,14 @@ public class AuthController {
         .maxAge(ttl)
         .build();
     res.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+  }
+
+  private String extractClientIp(HttpServletRequest request) {
+    String xff = request.getHeader("X-Forwarded-For");
+    if (xff != null && !xff.isBlank()) {
+      return xff.split(",")[0].trim();
+    }
+    return request.getRemoteAddr();
   }
 
   private void clearRefreshCookie(HttpServletResponse res) {
