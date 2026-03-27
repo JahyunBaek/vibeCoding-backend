@@ -97,6 +97,15 @@ public class TenantService {
     long mMyInfo    = tenantMapper.getMenuIdSeqNext();
 
     tenantMapper.insertMenu(tid, mDashboard, null, "Dashboard",   "/dashboard",     "layout-dashboard", 0,  "MENU", null);
+
+    // Medical sample menus (between Dashboard and Boards)
+    long mMedical   = tenantMapper.getMenuIdSeqNext();
+    long mPatients  = tenantMapper.getMenuIdSeqNext();
+    long mTrials    = tenantMapper.getMenuIdSeqNext();
+    tenantMapper.insertMenu(tid, mMedical,  null,     "Medical",         null,               "heart-pulse",    5,  "GROUP", null);
+    tenantMapper.insertMenu(tid, mPatients, mMedical, "Patients",        "/sample/patients",  "users",          0,  "MENU",  null);
+    tenantMapper.insertMenu(tid, mTrials,   mMedical, "Clinical Trials", "/sample/trials",    "flask-conical",  10, "MENU",  null);
+
     tenantMapper.insertMenu(tid, mBoards,    null, "Boards",       null,             "file-text",        10, "GROUP", null);
     tenantMapper.insertMenu(tid, mAdmin,     null, "Admin",        null,             "settings",         20, "GROUP", null);
     tenantMapper.insertMenu(tid, mCodes,     mAdmin, "Common Codes", "/admin/codes", "code",             0,  "MENU", null);
@@ -113,12 +122,15 @@ public class TenantService {
     tenantMapper.insertMenu(tid, mMyInfo,    null, "My Info",     "/me",            "user",             30, "MENU", null);
 
     // 3. ADMIN: 모든 메뉴 접근
-    long[] allMenus = { mDashboard, mBoards, mAdmin, mCodes, mBoardsAdmin, mUsers, mOrgs, mMenus, mRoles, mScreens, mSettings, mAudit, mMyInfo };
+    long[] allMenus = { mDashboard, mMedical, mPatients, mTrials, mBoards, mAdmin, mCodes, mBoardsAdmin, mUsers, mOrgs, mMenus, mRoles, mScreens, mSettings, mAudit, mMyInfo };
     for (long menuId : allMenus) {
       tenantMapper.insertMenuRole(menuId, "ADMIN");
     }
-    // USER: Dashboard, Boards group, My Info
+    // USER: Dashboard, Medical, Boards group, My Info
     tenantMapper.insertMenuRole(mDashboard, "USER");
+    tenantMapper.insertMenuRole(mMedical,   "USER");
+    tenantMapper.insertMenuRole(mPatients,  "USER");
+    tenantMapper.insertMenuRole(mTrials,    "USER");
     tenantMapper.insertMenuRole(mBoards,    "USER");
     tenantMapper.insertMenuRole(mMyInfo,    "USER");
 
@@ -136,6 +148,50 @@ public class TenantService {
     tenantMapper.insertCodeGroup(tid, "YN", "Yes/No");
     tenantMapper.insertCode(tid, "YN", "Y", "Yes", "Y", 0);
     tenantMapper.insertCode(tid, "YN", "N", "No",  "N", 10);
+
+    // Medical sample common codes
+    tenantMapper.insertCodeGroup(tid, "PATIENT_STATUS", "환자 상태");
+    tenantMapper.insertCode(tid, "PATIENT_STATUS", "ACTIVE", "활성", "ACTIVE", 0);
+    tenantMapper.insertCode(tid, "PATIENT_STATUS", "DISCHARGED", "퇴원", "DISCHARGED", 1);
+    tenantMapper.insertCode(tid, "PATIENT_STATUS", "FOLLOW_UP", "추적관찰", "FOLLOW_UP", 2);
+    tenantMapper.insertCode(tid, "PATIENT_STATUS", "INACTIVE", "비활성", "INACTIVE", 3);
+
+    tenantMapper.insertCodeGroup(tid, "DEPARTMENT", "진료과");
+    tenantMapper.insertCode(tid, "DEPARTMENT", "IM", "내과", "IM", 0);
+    tenantMapper.insertCode(tid, "DEPARTMENT", "GS", "외과", "GS", 1);
+    tenantMapper.insertCode(tid, "DEPARTMENT", "NR", "신경과", "NR", 2);
+    tenantMapper.insertCode(tid, "DEPARTMENT", "CD", "심장내과", "CD", 3);
+    tenantMapper.insertCode(tid, "DEPARTMENT", "OG", "산부인과", "OG", 4);
+    tenantMapper.insertCode(tid, "DEPARTMENT", "PD", "소아과", "PD", 5);
+    tenantMapper.insertCode(tid, "DEPARTMENT", "OS", "정형외과", "OS", 6);
+    tenantMapper.insertCode(tid, "DEPARTMENT", "DR", "피부과", "DR", 7);
+
+    tenantMapper.insertCodeGroup(tid, "BLOOD_TYPE", "혈액형");
+    tenantMapper.insertCode(tid, "BLOOD_TYPE", "A_POS", "A+", "A+", 0);
+    tenantMapper.insertCode(tid, "BLOOD_TYPE", "A_NEG", "A-", "A-", 1);
+    tenantMapper.insertCode(tid, "BLOOD_TYPE", "B_POS", "B+", "B+", 2);
+    tenantMapper.insertCode(tid, "BLOOD_TYPE", "B_NEG", "B-", "B-", 3);
+    tenantMapper.insertCode(tid, "BLOOD_TYPE", "O_POS", "O+", "O+", 4);
+    tenantMapper.insertCode(tid, "BLOOD_TYPE", "O_NEG", "O-", "O-", 5);
+    tenantMapper.insertCode(tid, "BLOOD_TYPE", "AB_POS", "AB+", "AB+", 6);
+    tenantMapper.insertCode(tid, "BLOOD_TYPE", "AB_NEG", "AB-", "AB-", 7);
+
+    tenantMapper.insertCodeGroup(tid, "GENDER", "성별");
+    tenantMapper.insertCode(tid, "GENDER", "M", "남성", "M", 0);
+    tenantMapper.insertCode(tid, "GENDER", "F", "여성", "F", 1);
+
+    tenantMapper.insertCodeGroup(tid, "TRIAL_PHASE", "임상시험 단계");
+    tenantMapper.insertCode(tid, "TRIAL_PHASE", "PHASE_1", "Phase I", "PHASE_1", 0);
+    tenantMapper.insertCode(tid, "TRIAL_PHASE", "PHASE_2", "Phase II", "PHASE_2", 1);
+    tenantMapper.insertCode(tid, "TRIAL_PHASE", "PHASE_3", "Phase III", "PHASE_3", 2);
+    tenantMapper.insertCode(tid, "TRIAL_PHASE", "PHASE_4", "Phase IV", "PHASE_4", 3);
+
+    tenantMapper.insertCodeGroup(tid, "TRIAL_STATUS", "임상시험 상태");
+    tenantMapper.insertCode(tid, "TRIAL_STATUS", "PLANNED", "계획", "PLANNED", 0);
+    tenantMapper.insertCode(tid, "TRIAL_STATUS", "RECRUITING", "모집중", "RECRUITING", 1);
+    tenantMapper.insertCode(tid, "TRIAL_STATUS", "ACTIVE", "진행중", "ACTIVE", 2);
+    tenantMapper.insertCode(tid, "TRIAL_STATUS", "COMPLETED", "완료", "COMPLETED", 3);
+    tenantMapper.insertCode(tid, "TRIAL_STATUS", "SUSPENDED", "중단", "SUSPENDED", 4);
 
     // 6. 초기 관리자 계정 생성
     String hash = passwordEncoder.encode(adminPassword);

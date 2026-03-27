@@ -41,6 +41,12 @@ dependencies {
 
   testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
+  // AWS SDK & Spring Cloud AWS (dev, prod 프로필)
+  implementation platform('software.amazon.awssdk:bom:2.29.51')
+  implementation 'software.amazon.awssdk:s3'
+  implementation platform('io.awspring.cloud:spring-cloud-aws-dependencies:3.3.0')
+  implementation 'io.awspring.cloud:spring-cloud-aws-starter-secrets-manager'
+
   // HTML 파싱 & XSS 방어
   implementation 'org.jsoup:jsoup:1.17.2'
 

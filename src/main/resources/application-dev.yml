@@ -1,31 +1,31 @@
 # ============================================================
-# PROD 프로필
+# DEV 프로필
 # 민감 정보는 AWS Secrets Manager에서 자동 주입됨.
-# 시크릿 이름: common-system/prod
+# 시크릿 이름: common-system/dev
 #
 # Secrets Manager에 저장할 JSON 예시:
 # {
-#   "db.host":      "prod-db.xxxx.ap-northeast-2.rds.amazonaws.com",
-#   "db.port":      "5432",
-#   "db.name":      "appdb",
-#   "db.schema":    "common_system",
-#   "db.username":   "app_prod",
-#   "db.password":   "xxxxxxxx",
-#   "redis.host":    "prod-redis.xxxx.cache.amazonaws.com",
-#   "redis.port":    "6379",
-#   "redis.password": "xxxxxxxx",
-#   "jwt.secret":    "your-production-grade-secret-key-at-least-32-bytes",
-#   "mail.host":     "email-smtp.ap-northeast-2.amazonaws.com",
-#   "mail.username":  "AKIA...",
-#   "mail.password":  "xxxxxxxx",
-#   "s3.bucket":     "common-system-prod-files",
-#   "cdn.base-url":  "https://dxxxxxx.cloudfront.net"
+#   "db.host":     "dev-db.xxxx.ap-northeast-2.rds.amazonaws.com",
+#   "db.port":     "5432",
+#   "db.name":     "appdb",
+#   "db.schema":   "common_system",
+#   "db.username":  "app_dev",
+#   "db.password":  "xxxxxxxx",
+#   "redis.host":   "dev-redis.xxxx.cache.amazonaws.com",
+#   "redis.port":   "6379",
+#   "redis.password": "",
+#   "jwt.secret":   "your-production-grade-secret-key-at-least-32-bytes",
+#   "mail.host":    "email-smtp.ap-northeast-2.amazonaws.com",
+#   "mail.username": "AKIA...",
+#   "mail.password": "xxxxxxxx",
+#   "s3.bucket":    "common-system-dev-files",
+#   "cdn.base-url": "https://dxxxxxx.cloudfront.net"
 # }
 # ============================================================
 
 spring:
   config:
-    import: aws-secretsmanager:common-system/prod
+    import: aws-secretsmanager:common-system/dev
 
   datasource:
     url: jdbc:postgresql://${db.host}:${db.port}/${db.name}?currentSchema=${db.schema}
@@ -55,8 +55,8 @@ spring:
   mail:
     host: ${mail.host:email-smtp.ap-northeast-2.amazonaws.com}
     port: 587
-    username: ${mail.username}
-    password: ${mail.password}
+    username: ${mail.username:}
+    password: ${mail.password:}
     properties:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
@@ -66,33 +66,31 @@ mybatis:
   configuration:
     map-underscore-to-camel-case: true
 
-# Spring Cloud AWS — prod에서는 IAM Role 사용 권장 (access-key 불필요)
+# Spring Cloud AWS 설정
 spring.cloud.aws:
   region:
     static: ${AWS_REGION:ap-northeast-2}
+  credentials:
+    access-key: ${AWS_ACCESS_KEY:}
+    secret-key: ${AWS_SECRET_KEY:}
 
 app:
   jwt:
     secret: ${jwt.secret}
-    access-token-minutes: 5
-    refresh-token-minutes: 60
+    access-token-minutes: 15
+    refresh-token-minutes: 120
   security:
     refresh-cookie-name: REFRESH_TOKEN
     refresh-cookie-path: /api/auth
-    refresh-cookie-samesite: Strict
+    refresh-cookie-samesite: Lax
     refresh-cookie-secure: true
   mail:
     enabled: true
     from: ${MAIL_FROM:noreply@common-system.com}
-    base-url: ${APP_BASE_URL}
+    base-url: ${APP_BASE_URL:https://dev.common-system.com}
   s3:
     bucket: ${s3.bucket}
     region: ${AWS_REGION:ap-northeast-2}
-    access-key:
-    secret-key:
+    access-key: ${AWS_ACCESS_KEY:}
+    secret-key: ${AWS_SECRET_KEY:}
     cdn-base-url: ${cdn.base-url:}
-
-# prod에서는 p6spy 비활성
-decorator:
-  datasource:
-    enabled: false

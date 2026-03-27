@@ -3,6 +3,10 @@ spring:
     name: common-system-backend
   profiles:
     active: local
+  cloud:
+    aws:
+      secrets-manager:
+        enabled: false  # 프로필별 yml에서 spring.config.import로 개별 활성화
 logging:
   level:
     root: INFO

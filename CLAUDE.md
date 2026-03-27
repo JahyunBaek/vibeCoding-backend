@@ -50,8 +50,11 @@ Controllers → Services → Mappers (MyBatis) → PostgreSQL
 | `code/` | Common code groups/items (dropdown data, cached in Redis) |
 | `tenant/` | Tenant CRUD + provisioning (SUPER_ADMIN only) |
 | `dashboard/` | Summary stats |
-| `common/` | `ApiResponse<T>`, `PageResponse<T>`, `AppException`, `GlobalExceptionHandler`, `ErrorCode`, `TenantContextHolder`, `RateLimitService`, `CsvExportService` |
-| `config/` | `SecurityConfig`, `RedisConfig`, `WebMvcConfig`, `OpenApiConfig` |
+| `sample/` | 의료 샘플 데이터 (Mock) — 환자/임상시험 API |
+| `invitation/` | 사용자 초대 (이메일 기반) |
+| `notification/` | 인앱 알림 (댓글, 비밀번호, 역할 변경) |
+| `common/` | `ApiResponse<T>`, `PageResponse<T>`, `AppException`, `GlobalExceptionHandler`, `ErrorCode`, `TenantContextHolder`, `RateLimitService`, `CsvExportService`, `I18nService`, `EmailService` |
+| `config/` | `SecurityConfig`, `RedisConfig`, `WebMvcConfig`, `OpenApiConfig`, `MessageSourceConfig` |
 
 ### Authentication
 
@@ -71,7 +74,7 @@ Controllers → Services → Mappers (MyBatis) → PostgreSQL
 
 ### Database
 
-- **Flyway** `V1`~`V9` 마이그레이션 — 스키마, 권한, 멀티테넌시, 설정, 감사로그, 전문검색 인덱스
+- **Flyway** `V1`~`V14` 마이그레이션 — 스키마, 권한, 멀티테넌시, 설정, 감사로그, 전문검색 인덱스, 초대, 알림, 테마, 메뉴순서, 의료샘플
 - **MyBatis** `map-underscore-to-camel-case: true` — DB columns use `snake_case`, Java uses `camelCase`
 - Common codes are Redis-cached under `codes:{tenantId}:{groupKey}` and invalidated on update
 - **전문 검색**: `posts` 테이블에 GIN 인덱스 (`V9`), 현재 제목+내용 ILIKE 검색
@@ -122,3 +125,55 @@ Controllers → Services → Mappers (MyBatis) → PostgreSQL
 | V7 | SUPER_ADMIN 시스템 메뉴 |
 | V8 | tenant_configs, audit_logs 테이블 |
 | V9 | 게시글 전문검색 GIN 인덱스 |
+| V10 | 초대(invitations) 테이블 |
+| V11 | 알림(notifications) 테이블 |
+| V12 | 테넌트 테마 설정 |
+| V13 | System 메뉴 순서 변경 (Admin 뒤로) |
+| V14 | 의료 샘플 공통코드 + Medical 메뉴 |
+
+### 공통코드 (Common Codes)
+
+공통코드는 드롭다운/콤보박스 등 선택 항목을 관리하는 시스템. Redis 캐시 기반.
+
+**구조**: `code_groups` (그룹) → `codes` (항목). 테넌트별 격리.
+
+**API**:
+- `GET /api/common-codes/{groupKey}` — 공개 조회 (캐시)
+- `GET/POST/PUT/DELETE /api/admin/codes/groups/**` — 관리자 CRUD
+
+**Redis 캐시**: `codes:{tenantId}:{groupKey}`, TTL 24h, CUD 시 자동 무효화.
+
+**등록된 공통코드 그룹** (V14 기준):
+
+| Group Key | 그룹명 | 항목 예시 |
+|-----------|--------|----------|
+| `YN` | Y/N | Y, N |
+| `PATIENT_STATUS` | 환자 상태 | ACTIVE, DISCHARGED, FOLLOW_UP, INACTIVE |
+| `DEPARTMENT` | 진료과 | IM(내과), GS(외과), NR(신경과), CD(심장내과), OG(산부인과), PD(소아과), OS(정형외과), DR(피부과) |
+| `BLOOD_TYPE` | 혈액형 | A_POS, A_NEG, B_POS, B_NEG, O_POS, O_NEG, AB_POS, AB_NEG |
+| `GENDER` | 성별 | M(남성), F(여성) |
+| `TRIAL_PHASE` | 임상시험 단계 | PHASE_1~PHASE_4 |
+| `TRIAL_STATUS` | 임상시험 상태 | PLANNED, RECRUITING, ACTIVE, COMPLETED, SUSPENDED |
+
+**새 공통코드 추가 시**:
+1. Flyway 마이그레이션에 `code_groups` + `codes` INSERT (tenant_id=1, 0 모두)
+2. `TenantService.provisionTenant()`에 `insertCodeGroup()` + `insertCode()` 추가 (신규 테넌트 자동 생성)
+3. 프론트에서 `api.commonCodes("GROUP_KEY")`로 조회하여 `<select>` 등에 사용
+
+### 다국어 (i18n)
+
+**MessageSource 기반**: `messages.properties` (기본/ko), `messages_ko.properties`, `messages_en.properties`
+
+**I18nService** (`common/`): `getMessage(code, locale, args...)` — 테넌트 locale에 따라 메시지 반환.
+
+**사용처**: 이메일 템플릿, 알림 메시지, CSV 내보내기 헤더
+
+**테넌트 locale**: `tenant_configs` 테이블의 `locale` 키 (`ko` 또는 `en`). `TenantConfigService.getLocale(tenantId)`로 조회.
+
+### 샘플 데이터 (Medical)
+
+**SampleDataController** (`sample/`): Mock 데이터 반환 (DB 없음).
+- `GET /api/sample/patients` — 환자 목록 (page, size, status, department, search)
+- `GET /api/sample/trials` — 임상시험 목록 (page, size, phase, status, search)
+
+상태/부서 등의 필터 값은 공통코드에서 조회하여 사용.
