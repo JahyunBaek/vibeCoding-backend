@@ -94,6 +94,10 @@
     ON CONFLICT DO NOTHING
   </insert>
 
+  <select id="findRoleKeysByMenuId" resultType="string">
+    SELECT mr.role_key FROM menu_roles mr WHERE mr.menu_id = #{menuId} ORDER BY mr.role_key
+  </select>
+
   <select id="findByBoardId" resultMap="MenuMap">
     SELECT m.* FROM menus m WHERE m.board_id = #{boardId} LIMIT 1
   </select>

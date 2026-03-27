@@ -41,7 +41,9 @@ public class MenuService {
   private List<MenuNode> toTree(List<Menu> menus) {
     Map<Long, MenuNode> map = new HashMap<>();
     for (Menu m : menus) {
-      map.put(m.menuId(), MenuNode.from(m));
+      MenuNode node = MenuNode.from(m);
+      node.roleKeys = menuMapper.findRoleKeysByMenuId(m.menuId());
+      map.put(m.menuId(), node);
     }
 
     List<MenuNode> roots = new ArrayList<>();

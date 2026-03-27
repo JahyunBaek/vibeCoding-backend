@@ -14,6 +14,7 @@ public class MenuNode {
   public boolean useYn;
   public String menuType;
   public Long boardId;
+  public List<String> roleKeys = new ArrayList<>();
   public List<MenuNode> children = new ArrayList<>();
 
   public static MenuNode from(Menu m) {

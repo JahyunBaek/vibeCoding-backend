@@ -30,5 +30,7 @@ public interface MenuMapper {
 
   void insertRole(@Param("menuId") long menuId, @Param("roleKey") String roleKey);
 
+  List<String> findRoleKeysByMenuId(@Param("menuId") long menuId);
+
   Menu findByBoardId(@Param("boardId") long boardId);
 }
