@@ -22,7 +22,7 @@ public class JwtService {
   public JwtService(JwtProperties props) {
     this.props = props;
     if (DEFAULT_SECRET.equals(props.secret())) {
-      log.warn("⚠️  JWT secret이 기본값입니다. 프로덕션 환경에서는 반드시 JWT_SECRET 환경변수를 설정하세요!");
+      log.warn(" JWT secret이 기본값입니다. 프로덕션 환경에서는 반드시 JWT_SECRET 환경변수를 설정하세요!");
     }
     this.key = Keys.hmacShaKeyFor(props.secret().getBytes(StandardCharsets.UTF_8));
   }

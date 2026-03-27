@@ -32,6 +32,19 @@ public class TenantConfigService {
     }
   }
 
+  /**
+   * 특정 테넌트의 locale을 조회한다. 기본값 "ko".
+   */
+  public String getLocale(Long tenantId) {
+    if (tenantId == null) return "ko";
+    List<TenantConfig> configs = configMapper.findByTenantId(tenantId);
+    return configs.stream()
+        .filter(c -> "locale".equals(c.configKey()))
+        .map(TenantConfig::configValue)
+        .findFirst()
+        .orElse("ko");
+  }
+
   /** provisioning 시 기본값 삽입 */
   @Transactional
   public void initDefaults(long tenantId, String tenantName) {

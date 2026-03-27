@@ -6,5 +6,5 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@EnableConfigurationProperties({JwtProperties.class, SecurityProperties.class})
+@EnableConfigurationProperties({JwtProperties.class, SecurityProperties.class, MailProperties.class})
 public class PropertiesConfig {}

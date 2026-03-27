@@ -27,6 +27,15 @@ spring:
       max-file-size: 50MB
       max-request-size: 60MB
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+
 mybatis:
   mapper-locations: classpath:/mappers/**/*.xml
   configuration:
@@ -43,6 +52,10 @@ app:
     refresh-cookie-samesite: Lax
     refresh-cookie-secure: false
   file-storage-path: ${FILE_STORAGE_PATH:C:/storage}
+  mail:
+    enabled: ${MAIL_ENABLED:false}
+    from: ${MAIL_FROM:noreply@common-system.com}
+    base-url: ${APP_BASE_URL:http://localhost:5173}
 
 decorator:
   datasource:

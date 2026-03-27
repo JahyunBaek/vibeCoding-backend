@@ -35,22 +35,48 @@ public class TenantBrandingController {
     Long tenantId = tenantCtx.currentTenantId();
     if (tenantId == null) {
       // SUPER_ADMIN has no tenant — return defaults
-      return ApiResponse.ok(Map.of("companyName", "Common System", "logoUrl", ""));
+      return ApiResponse.ok(Map.of(
+        "companyName", "Common System",
+        "logoUrl", "",
+        "locale", "ko",
+        "primaryColor", "#3B82F6",
+        "sidebarColor", "#1E293B",
+        "accentColor", "#2563EB"
+      ));
     }
 
     List<TenantConfig> configs = configMapper.findByTenantId(tenantId);
 
     String companyName = "Common System";
     String logoUrl = "";
+    String locale = "ko";
+    String primaryColor = "#3B82F6";
+    String sidebarColor = "#1E293B";
+    String accentColor = "#2563EB";
 
     for (TenantConfig c : configs) {
       if ("company_name".equals(c.configKey())) {
         companyName = c.configValue() != null ? c.configValue() : companyName;
       } else if ("logo_url".equals(c.configKey())) {
         logoUrl = c.configValue() != null ? c.configValue() : "";
+      } else if ("locale".equals(c.configKey())) {
+        locale = c.configValue() != null ? c.configValue() : locale;
+      } else if ("primary_color".equals(c.configKey())) {
+        primaryColor = c.configValue() != null ? c.configValue() : primaryColor;
+      } else if ("sidebar_color".equals(c.configKey())) {
+        sidebarColor = c.configValue() != null ? c.configValue() : sidebarColor;
+      } else if ("accent_color".equals(c.configKey())) {
+        accentColor = c.configValue() != null ? c.configValue() : accentColor;
       }
     }
 
-    return ApiResponse.ok(Map.of("companyName", companyName, "logoUrl", logoUrl));
+    return ApiResponse.ok(Map.of(
+      "companyName", companyName,
+      "logoUrl", logoUrl,
+      "locale", locale,
+      "primaryColor", primaryColor,
+      "sidebarColor", sidebarColor,
+      "accentColor", accentColor
+    ));
   }
 }

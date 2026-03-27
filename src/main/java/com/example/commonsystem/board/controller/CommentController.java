@@ -40,7 +40,7 @@ public class CommentController {
   public ApiResponse<Void> create(@PathVariable long postId,
                                  @AuthenticationPrincipal UserPrincipal principal,
                                  @Valid @RequestBody CreateCommentRequest req) {
-    commentService.create(postId, principal.getUserId(), req.content());
+    commentService.create(postId, principal.getUserId(), principal.getName(), principal.getTenantId(), req.content());
     return ApiResponse.ok();
   }
 

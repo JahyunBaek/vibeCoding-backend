@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.commonsystem.invitation.mapper.InvitationMapper">
+
+  <select id="findByToken" parameterType="string" resultType="com.example.commonsystem.invitation.domain.Invitation">
+    SELECT invitation_id AS invitationId,
+           tenant_id     AS tenantId,
+           email,
+           role_key      AS roleKey,
+           token,
+           status,
+           invited_by    AS invitedBy,
+           created_at    AS createdAt,
+           expires_at    AS expiresAt
+      FROM invitations
+     WHERE token = #{token}
+     LIMIT 1
+  </select>
+
+  <insert id="insert">
+    INSERT INTO invitations(tenant_id, email, role_key, token, invited_by, expires_at)
+    VALUES(#{tenantId}, #{email}, #{roleKey}, #{token}, #{invitedBy}, #{expiresAt})
+  </insert>
+
+  <update id="updateStatus">
+    UPDATE invitations
+       SET status = #{status}
+     WHERE invitation_id = #{invitationId}
+  </update>
+
+  <select id="findByTenant" resultType="com.example.commonsystem.invitation.dto.InvitationDtos$InvitationListRow">
+    SELECT i.invitation_id AS invitationId,
+           i.tenant_id     AS tenantId,
+           i.email,
+           i.role_key      AS roleKey,
+           i.status,
+           i.invited_by    AS invitedBy,
+           u.username      AS invitedByUsername,
+           i.created_at    AS createdAt,
+           i.expires_at    AS expiresAt
+      FROM invitations i
+      LEFT JOIN users u ON u.user_id = i.invited_by
+     WHERE i.tenant_id = #{tenantId}
+     ORDER BY i.invitation_id DESC
+  </select>
+
+</mapper>

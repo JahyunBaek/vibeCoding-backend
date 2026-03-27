@@ -5,6 +5,8 @@ import com.example.commonsystem.common.ErrorCode;
 import com.example.commonsystem.common.PageResponse;
 import com.example.commonsystem.common.TenantContextHolder;
 import com.example.commonsystem.common.exception.AppException;
+import com.example.commonsystem.notification.service.NotificationService;
+import com.example.commonsystem.tenant.service.TenantConfigService;
 import com.example.commonsystem.user.domain.User;
 import com.example.commonsystem.user.dto.UserCreateCommand;
 import com.example.commonsystem.user.dto.UserListRow;
@@ -22,13 +24,18 @@ public class UserService {
   private final PasswordEncoder passwordEncoder;
   private final TenantContextHolder tenantCtx;
   private final AuditService auditService;
+  private final NotificationService notificationService;
+  private final TenantConfigService tenantConfigService;
 
   public UserService(UserMapper userMapper, PasswordEncoder passwordEncoder,
-      TenantContextHolder tenantCtx, AuditService auditService) {
+      TenantContextHolder tenantCtx, AuditService auditService,
+      NotificationService notificationService, TenantConfigService tenantConfigService) {
     this.userMapper = userMapper;
     this.passwordEncoder = passwordEncoder;
     this.tenantCtx = tenantCtx;
     this.auditService = auditService;
+    this.notificationService = notificationService;
+    this.tenantConfigService = tenantConfigService;
   }
 
   public User me(long userId) {
@@ -55,6 +62,11 @@ public class UserService {
     }
 
     userMapper.update(new UserUpdateCommand(userId, hash, name, null, current.orgId(), current.enabled()));
+
+    if (hash != null) {
+      String locale = tenantConfigService.getLocale(current.tenantId());
+      notificationService.notifyPasswordChanged(userId, current.tenantId(), locale);
+    }
   }
 
   public List<UserListRow> listAll(Long tenantIdOverride) {
@@ -94,8 +106,15 @@ public class UserService {
     if (target != null && "SUPER_ADMIN".equals(target.roleKey()) && !tenantCtx.isSuperAdmin()) {
       throw new AppException(ErrorCode.FORBIDDEN, "SUPER_ADMIN 계정은 슈퍼 관리자만 수정할 수 있습니다.");
     }
+    String oldRole = target != null ? target.roleKey() : null;
     String hash = (password == null || password.isBlank()) ? null : passwordEncoder.encode(password);
     userMapper.update(new UserUpdateCommand(userId, hash, name, roleKey, orgId, enabled));
+
+    // 역할이 변경된 경우 알림
+    if (target != null && roleKey != null && !roleKey.equals(oldRole)) {
+      String locale = tenantConfigService.getLocale(target.tenantId());
+      notificationService.notifyRoleChanged(userId, target.tenantId(), oldRole, roleKey, locale);
+    }
   }
 
   @Transactional
@@ -107,6 +126,9 @@ public class UserService {
     }
     String hash = passwordEncoder.encode(newPassword);
     userMapper.update(new UserUpdateCommand(userId, hash, target.name(), target.roleKey(), target.orgId(), target.enabled()));
+
+    String locale = tenantConfigService.getLocale(target.tenantId());
+    notificationService.notifyPasswordChanged(userId, target.tenantId(), locale);
   }
 
   @Transactional
@@ -121,6 +143,9 @@ public class UserService {
     }
     String hash = passwordEncoder.encode(newPassword);
     userMapper.update(new UserUpdateCommand(userId, hash, target.name(), target.roleKey(), target.orgId(), target.enabled()));
+
+    String locale = tenantConfigService.getLocale(target.tenantId());
+    notificationService.notifyPasswordReset(userId, target.tenantId(), locale);
   }
 
   @Transactional

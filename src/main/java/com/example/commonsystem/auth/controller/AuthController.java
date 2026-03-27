@@ -10,10 +10,16 @@ import com.example.commonsystem.auth.service.RefreshTokenService;
 import com.example.commonsystem.common.ApiResponse;
 import com.example.commonsystem.common.ErrorCode;
 import com.example.commonsystem.common.RateLimitService;
+import com.example.commonsystem.invitation.domain.Invitation;
+import com.example.commonsystem.invitation.dto.InvitationDtos.InvitationInfoResponse;
+import com.example.commonsystem.invitation.dto.InvitationDtos.SignupRequest;
+import com.example.commonsystem.invitation.service.InvitationService;
 import com.example.commonsystem.security.JwtProperties;
 import com.example.commonsystem.security.JwtService;
 import com.example.commonsystem.security.SecurityProperties;
 import com.example.commonsystem.security.UserPrincipal;
+import com.example.commonsystem.tenant.domain.Tenant;
+import com.example.commonsystem.tenant.mapper.TenantMapper;
 import com.example.commonsystem.user.domain.User;
 import com.example.commonsystem.user.mapper.UserMapper;
 import com.example.commonsystem.user.service.UserService;
@@ -34,6 +40,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -55,6 +63,8 @@ public class AuthController {
   private final UserService userService;
   private final AuditService auditService;
   private final RateLimitService rateLimitService;
+  private final InvitationService invitationService;
+  private final TenantMapper tenantMapper;
 
   @Operation(summary = "로그인")
   @PostMapping("/login")
@@ -162,6 +172,30 @@ public class AuthController {
           .body(ApiResponse.fail(ErrorCode.VALIDATION, "유효하지 않거나 만료된 재설정 토큰입니다."));
     }
     userService.resetPasswordByToken(userId, req.newPassword());
+    return ResponseEntity.ok(ApiResponse.ok());
+  }
+
+  @Operation(summary = "초대 토큰 검증")
+  @GetMapping("/invitation/{token}")
+  public ResponseEntity<ApiResponse<InvitationInfoResponse>> validateInvitation(
+      @PathVariable String token
+  ) {
+    Invitation inv = invitationService.validateToken(token);
+    if (inv == null) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(ApiResponse.fail(ErrorCode.VALIDATION, "유효하지 않거나 만료된 초대 토큰입니다."));
+    }
+    Tenant tenant = tenantMapper.findById(inv.tenantId());
+    String tenantName = tenant != null ? tenant.tenantName() : "";
+    return ResponseEntity.ok(ApiResponse.ok(new InvitationInfoResponse(inv.email(), tenantName)));
+  }
+
+  @Operation(summary = "초대 수락 및 회원가입")
+  @PostMapping("/signup")
+  public ResponseEntity<ApiResponse<Void>> signup(
+      @Valid @RequestBody SignupRequest req
+  ) {
+    invitationService.acceptInvitation(req.token(), req.username(), req.password(), req.name());
     return ResponseEntity.ok(ApiResponse.ok());
   }
 

@@ -6,7 +6,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import com.example.commonsystem.audit.service.AuditService;
 import com.example.commonsystem.common.ApiResponse;
 import com.example.commonsystem.common.CsvExportService;
+import com.example.commonsystem.common.I18nService;
 import com.example.commonsystem.common.PageResponse;
+import com.example.commonsystem.common.TenantContextHolder;
+import com.example.commonsystem.tenant.service.TenantConfigService;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,10 +27,18 @@ public class AdminAuditController {
 
   private final AuditService auditService;
   private final CsvExportService csvExportService;
+  private final I18nService i18n;
+  private final TenantContextHolder tenantCtx;
+  private final TenantConfigService tenantConfigService;
 
-  public AdminAuditController(AuditService auditService, CsvExportService csvExportService) {
+  public AdminAuditController(AuditService auditService, CsvExportService csvExportService,
+      I18nService i18n, TenantContextHolder tenantCtx,
+      TenantConfigService tenantConfigService) {
     this.auditService = auditService;
     this.csvExportService = csvExportService;
+    this.i18n = i18n;
+    this.tenantCtx = tenantCtx;
+    this.tenantConfigService = tenantConfigService;
   }
 
   @Operation(summary = "감사로그 목록 조회")
@@ -50,7 +61,16 @@ public class AdminAuditController {
       @RequestParam(required = false) String targetType
   ) {
     List<AuditLog> logs = auditService.listAll(tenantId, action, targetType);
-    List<String> headers = List.of("로그ID", "사용자", "액션", "대상타입", "대상ID", "상세", "일시");
+    String locale = tenantConfigService.getLocale(tenantCtx.currentTenantId());
+    List<String> headers = List.of(
+        i18n.getMessage("csv.audit.logId", locale),
+        i18n.getMessage("csv.audit.user", locale),
+        i18n.getMessage("csv.audit.action", locale),
+        i18n.getMessage("csv.audit.targetType", locale),
+        i18n.getMessage("csv.audit.targetId", locale),
+        i18n.getMessage("csv.audit.detail", locale),
+        i18n.getMessage("csv.audit.dateTime", locale)
+    );
     List<List<String>> rows = new ArrayList<>();
     for (AuditLog log : logs) {
       rows.add(List.of(

@@ -6,7 +6,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import com.example.commonsystem.auth.service.PasswordResetService;
 import com.example.commonsystem.common.ApiResponse;
 import com.example.commonsystem.common.CsvExportService;
+import com.example.commonsystem.common.EmailService;
 import com.example.commonsystem.common.PageResponse;
+import com.example.commonsystem.common.I18nService;
+import com.example.commonsystem.common.TenantContextHolder;
+import com.example.commonsystem.tenant.service.TenantConfigService;
 import com.example.commonsystem.user.dto.UserListRow;
 import com.example.commonsystem.user.service.UserService;
 import jakarta.validation.Valid;
@@ -30,12 +34,21 @@ public class AdminUserController {
   private final UserService userService;
   private final PasswordResetService passwordResetService;
   private final CsvExportService csvExportService;
+  private final EmailService emailService;
+  private final I18nService i18n;
+  private final TenantContextHolder tenantCtx;
+  private final TenantConfigService tenantConfigService;
 
   public AdminUserController(UserService userService, PasswordResetService passwordResetService,
-      CsvExportService csvExportService) {
+      CsvExportService csvExportService, EmailService emailService, I18nService i18n,
+      TenantContextHolder tenantCtx, TenantConfigService tenantConfigService) {
     this.userService = userService;
     this.passwordResetService = passwordResetService;
     this.csvExportService = csvExportService;
+    this.emailService = emailService;
+    this.i18n = i18n;
+    this.tenantCtx = tenantCtx;
+    this.tenantConfigService = tenantConfigService;
   }
 
   @Operation(summary = "사용자 목록 조회")
@@ -53,7 +66,15 @@ public class AdminUserController {
   @GetMapping("/export")
   public ResponseEntity<byte[]> export(@RequestParam(required = false) Long tenantId) {
     List<UserListRow> users = userService.listAll(tenantId);
-    List<String> headers = List.of("사용자ID", "아이디", "이름", "역할", "조직", "활성여부");
+    String locale = tenantConfigService.getLocale(tenantCtx.currentTenantId());
+    List<String> headers = List.of(
+        i18n.getMessage("csv.users.userId", locale),
+        i18n.getMessage("csv.users.username", locale),
+        i18n.getMessage("csv.users.name", locale),
+        i18n.getMessage("csv.users.role", locale),
+        i18n.getMessage("csv.users.org", locale),
+        i18n.getMessage("csv.users.active", locale)
+    );
     List<List<String>> rows = new ArrayList<>();
     for (UserListRow u : users) {
       rows.add(List.of(
@@ -118,6 +139,12 @@ public class AdminUserController {
   @PostMapping("/{userId}/reset-token")
   public ApiResponse<ResetTokenResponse> generateResetToken(@PathVariable long userId) {
     String token = passwordResetService.generateResetToken(userId);
+    // 사용자 정보를 조회하여 이메일 발송 시도 (email 컬럼 추가 전까지 username을 수신 주소로 사용)
+    var user = userService.me(userId);
+    if (user != null) {
+      String locale = tenantConfigService.getLocale(tenantCtx.currentTenantId());
+      emailService.sendPasswordReset(user.username(), user.name(), token, locale);
+    }
     return ApiResponse.ok(new ResetTokenResponse(token, passwordResetService.getExpiresInMinutes()));
   }
 

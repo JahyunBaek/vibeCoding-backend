@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.commonsystem.notification.mapper.NotificationMapper">
+
+  <select id="findByUser" resultType="com.example.commonsystem.notification.domain.Notification">
+    SELECT notification_id AS notificationId,
+           tenant_id       AS tenantId,
+           user_id         AS userId,
+           type,
+           title,
+           message,
+           link,
+           read_yn         AS readYn,
+           created_at      AS createdAt
+      FROM notifications
+     WHERE user_id = #{userId}
+     ORDER BY created_at DESC
+     LIMIT #{limit}
+  </select>
+
+  <select id="countUnread" resultType="int">
+    SELECT COUNT(*)
+      FROM notifications
+     WHERE user_id = #{userId}
+       AND read_yn = FALSE
+  </select>
+
+  <insert id="insert" parameterType="com.example.commonsystem.notification.domain.Notification">
+    INSERT INTO notifications(tenant_id, user_id, type, title, message, link)
+    VALUES(#{tenantId}, #{userId}, #{type}, #{title}, #{message}, #{link})
+  </insert>
+
+  <update id="markAsRead">
+    UPDATE notifications
+       SET read_yn = TRUE
+     WHERE notification_id = #{notificationId}
+       AND user_id = #{userId}
+  </update>
+
+  <update id="markAllAsRead">
+    UPDATE notifications
+       SET read_yn = TRUE
+     WHERE user_id = #{userId}
+       AND read_yn = FALSE
+  </update>
+
+</mapper>

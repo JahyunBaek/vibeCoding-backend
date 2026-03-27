@@ -24,6 +24,7 @@ dependencies {
   implementation 'org.springframework.boot:spring-boot-starter-security'
   implementation 'org.springframework.boot:spring-boot-starter-data-redis'
   implementation 'org.springframework.boot:spring-boot-starter-actuator'
+  implementation 'org.springframework.boot:spring-boot-starter-mail'
 
   implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.4'
 
@@ -54,5 +55,9 @@ tasks.named('test') {
   useJUnitPlatform()
 }
 tasks.withType(JavaCompile).configureEach {
+  options.encoding = 'UTF-8'
   options.compilerArgs += ["-parameters"]
+}
+bootRun {
+  jvmArgs = ["-Dfile.encoding=UTF-8"]
 }
