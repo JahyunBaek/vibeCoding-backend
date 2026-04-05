@@ -19,7 +19,8 @@
 #   "mail.username":  "AKIA...",
 #   "mail.password":  "xxxxxxxx",
 #   "s3.bucket":     "common-system-prod-files",
-#   "cdn.base-url":  "https://dxxxxxx.cloudfront.net"
+#   "cdn.base-url":  "https://dxxxxxx.cloudfront.net",
+#   "gemini.api-key": "AIza..."
 # }
 # ============================================================
 
@@ -70,6 +71,10 @@ mybatis:
 spring.cloud.aws:
   region:
     static: ${AWS_REGION:ap-northeast-2}
+
+  # Gemini AI (Secrets Manager에서 주입)
+  gemini:
+    api-key: ${gemini.api-key:}
 
 app:
   jwt:

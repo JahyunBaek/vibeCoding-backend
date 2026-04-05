@@ -4,7 +4,10 @@
       "Bash(xargs ls:*)",
       "Bash(xargs grep:*)",
       "Bash(grep:*)",
-      "Bash(./gradlew compileJava)"
+      "Bash(./gradlew compileJava)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }

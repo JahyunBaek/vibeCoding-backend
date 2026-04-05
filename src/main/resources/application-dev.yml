@@ -19,7 +19,8 @@
 #   "mail.username": "AKIA...",
 #   "mail.password": "xxxxxxxx",
 #   "s3.bucket":    "common-system-dev-files",
-#   "cdn.base-url": "https://dxxxxxx.cloudfront.net"
+#   "cdn.base-url": "https://dxxxxxx.cloudfront.net",
+#   "gemini.api-key": "AIza..."
 # }
 # ============================================================
 
@@ -73,6 +74,10 @@ spring.cloud.aws:
   credentials:
     access-key: ${AWS_ACCESS_KEY:}
     secret-key: ${AWS_SECRET_KEY:}
+
+  # Gemini AI (Secrets Manager에서 주입)
+  gemini:
+    api-key: ${gemini.api-key:}
 
 app:
   jwt:

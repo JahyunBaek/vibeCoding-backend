@@ -41,6 +41,10 @@ mybatis:
   configuration:
     map-underscore-to-camel-case: true
 
+  # Gemini AI
+  gemini:
+    api-key: ${GEMINI_API_KEY:}
+
 app:
   jwt:
     secret: ${JWT_SECRET:change-me-super-secret-key-at-least-32-bytes}
