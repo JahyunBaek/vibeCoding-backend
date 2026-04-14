@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.commonsystem.genomics.mapper.PanelMapper">
+
+  <select id="count" resultType="long">
+    SELECT COUNT(*)
+      FROM gene_panels
+     WHERE 1=1
+    <if test="tenantId != null"> AND tenant_id = #{tenantId}</if>
+    <if test="search != null and search != ''">
+       AND (name ILIKE '%' || #{search} || '%' OR panel_code ILIKE '%' || #{search} || '%')
+    </if>
+  </select>
+
+  <select id="findPage" resultType="com.example.commonsystem.genomics.dto.PanelDtos$PanelListRow">
+    SELECT panel_id    AS panelId,
+           panel_code  AS panelCode,
+           name,
+           category,
+           gene_count  AS geneCount,
+           use_yn      AS useYn,
+           created_at  AS createdAt
+      FROM gene_panels
+     WHERE 1=1
+    <if test="tenantId != null"> AND tenant_id = #{tenantId}</if>
+    <if test="search != null and search != ''">
+       AND (name ILIKE '%' || #{search} || '%' OR panel_code ILIKE '%' || #{search} || '%')
+    </if>
+     ORDER BY panel_id DESC
+     LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+  <resultMap id="panelDetailMap" type="com.example.commonsystem.genomics.dto.PanelDtos$PanelDetail">
+    <id property="panelId" column="panel_id"/>
+    <result property="panelCode" column="panel_code"/>
+    <result property="name" column="name"/>
+    <result property="description" column="description"/>
+    <result property="category" column="category"/>
+    <result property="geneCount" column="gene_count"/>
+    <result property="useYn" column="use_yn"/>
+    <result property="createdAt" column="created_at"/>
+    <result property="updatedAt" column="updated_at"/>
+    <collection property="genes" ofType="com.example.commonsystem.genomics.dto.PanelDtos$PanelGeneItem">
+      <id property="panelGeneId" column="pg_id"/>
+      <result property="geneSymbol" column="pg_gene_symbol"/>
+      <result property="chromosome" column="pg_chromosome"/>
+      <result property="description" column="pg_description"/>
+    </collection>
+  </resultMap>
+
+  <select id="findById" resultMap="panelDetailMap">
+    SELECT gp.panel_id,
+           gp.panel_code,
+           gp.name,
+           gp.description,
+           gp.category,
+           gp.gene_count,
+           gp.use_yn,
+           gp.created_at,
+           gp.updated_at,
+           pg.panel_gene_id AS pg_id,
+           pg.gene_symbol   AS pg_gene_symbol,
+           pg.chromosome    AS pg_chromosome,
+           pg.description   AS pg_description
+      FROM gene_panels gp
+      LEFT JOIN panel_genes pg ON pg.panel_id = gp.panel_id
+     WHERE gp.panel_id = #{panelId}
+     ORDER BY pg.gene_symbol
+  </select>
+
+  <select id="findActive" resultType="com.example.commonsystem.genomics.dto.PanelDtos$PanelListRow">
+    SELECT panel_id    AS panelId,
+           panel_code  AS panelCode,
+           name,
+           category,
+           gene_count  AS geneCount,
+           use_yn      AS useYn,
+           created_at  AS createdAt
+      FROM gene_panels
+     WHERE use_yn = TRUE
+    <if test="tenantId != null"> AND tenant_id = #{tenantId}</if>
+     ORDER BY name
+  </select>
+
+  <insert id="insert" parameterType="com.example.commonsystem.genomics.dto.PanelDtos$PanelCreateCommand"
+          useGeneratedKeys="true" keyProperty="panelId" keyColumn="panel_id">
+    INSERT INTO gene_panels (tenant_id, panel_code, name, description, category)
+    VALUES (#{tenantId}, #{panelCode}, #{name}, #{description}, #{category})
+  </insert>
+
+  <update id="update" parameterType="com.example.commonsystem.genomics.dto.PanelDtos$PanelUpdateCommand">
+    UPDATE gene_panels
+       SET name = #{name},
+           description = #{description},
+           category = #{category},
+           use_yn = #{useYn},
+           updated_at = NOW()
+     WHERE panel_id = #{panelId}
+  </update>
+
+  <delete id="delete">
+    DELETE FROM gene_panels WHERE panel_id = #{panelId}
+  </delete>
+
+  <delete id="deleteGenes">
+    DELETE FROM panel_genes WHERE panel_id = #{panelId}
+  </delete>
+
+  <insert id="insertGene">
+    INSERT INTO panel_genes (panel_id, gene_symbol, chromosome, description)
+    VALUES (#{panelId}, #{gene.geneSymbol}, #{gene.chromosome}, #{gene.description})
+  </insert>
+
+  <update id="updateGeneCount">
+    UPDATE gene_panels
+       SET gene_count = (SELECT COUNT(*) FROM panel_genes WHERE panel_id = #{panelId}),
+           updated_at = NOW()
+     WHERE panel_id = #{panelId}
+  </update>
+
+</mapper>

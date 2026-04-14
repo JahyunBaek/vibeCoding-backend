@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.commonsystem.genomics.mapper.SampleMapper">
+
+  <select id="count" resultType="long">
+    SELECT COUNT(*)
+      FROM genomic_samples gs
+     WHERE 1=1
+    <if test="tenantId != null"> AND gs.tenant_id = #{tenantId}</if>
+    <if test="status != null and status != ''"> AND gs.status = #{status}</if>
+    <if test="search != null and search != ''">
+       AND (gs.sample_no ILIKE '%' || #{search} || '%')
+    </if>
+  </select>
+
+  <select id="findPage" resultType="com.example.commonsystem.genomics.dto.SampleDtos$SampleListRow">
+    SELECT gs.sample_id     AS sampleId,
+           gs.sample_no     AS sampleNo,
+           gs.patient_id    AS patientId,
+           ''               AS patientName,
+           gs.sample_type   AS sampleType,
+           gp.name          AS panelName,
+           gs.status,
+           gs.received_date AS receivedDate,
+           gs.completed_date AS completedDate,
+           gs.created_at    AS createdAt
+      FROM genomic_samples gs
+      LEFT JOIN gene_panels gp ON gp.panel_id = gs.panel_id
+     WHERE 1=1
+    <if test="tenantId != null"> AND gs.tenant_id = #{tenantId}</if>
+    <if test="status != null and status != ''"> AND gs.status = #{status}</if>
+    <if test="search != null and search != ''">
+       AND (gs.sample_no ILIKE '%' || #{search} || '%')
+    </if>
+     ORDER BY gs.sample_id DESC
+     LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+  <select id="findById" resultType="com.example.commonsystem.genomics.dto.SampleDtos$SampleDetail">
+    SELECT gs.sample_id     AS sampleId,
+           gs.tenant_id     AS tenantId,
+           gs.patient_id    AS patientId,
+           ''               AS patientName,
+           gs.sample_no     AS sampleNo,
+           gs.sample_type   AS sampleType,
+           gs.panel_id      AS panelId,
+           gp.name          AS panelName,
+           gs.status,
+           gs.received_date AS receivedDate,
+           gs.completed_date AS completedDate,
+           gs.note,
+           gs.created_by    AS createdBy,
+           ''               AS createdByName,
+           gs.created_at    AS createdAt,
+           gs.updated_at    AS updatedAt,
+           (SELECT COUNT(*) FROM variants v WHERE v.sample_id = gs.sample_id) AS variantCount
+      FROM genomic_samples gs
+      LEFT JOIN gene_panels gp ON gp.panel_id = gs.panel_id
+     WHERE gs.sample_id = #{sampleId}
+  </select>
+
+  <select id="generateSampleNo" resultType="string">
+    SELECT 'GS-' || TO_CHAR(NOW(), 'YYYY') || '-' ||
+           LPAD((COALESCE(
+             (SELECT MAX(CAST(SUBSTRING(sample_no FROM 9) AS INT))
+                FROM genomic_samples
+               WHERE tenant_id = #{tenantId}
+                 AND sample_no LIKE 'GS-' || TO_CHAR(NOW(), 'YYYY') || '-%'),
+             0) + 1)::TEXT, 4, '0')
+  </select>
+
+  <insert id="insert" parameterType="com.example.commonsystem.genomics.dto.SampleDtos$SampleCreateCommand"
+          useGeneratedKeys="true" keyProperty="sampleId" keyColumn="sample_id">
+    INSERT INTO genomic_samples (tenant_id, patient_id, sample_no, sample_type, panel_id, note, created_by)
+    VALUES (#{tenantId}, #{patientId},
+            (SELECT 'GS-' || TO_CHAR(NOW(), 'YYYY') || '-' ||
+                    LPAD((COALESCE(
+                      (SELECT MAX(CAST(SUBSTRING(s.sample_no FROM 9) AS INT))
+                         FROM genomic_samples s
+                        WHERE s.tenant_id = #{tenantId}
+                          AND s.sample_no LIKE 'GS-' || TO_CHAR(NOW(), 'YYYY') || '-%'),
+                      0) + 1)::TEXT, 4, '0')),
+            #{sampleType}, #{panelId}, #{note}, #{createdBy})
+  </insert>
+
+  <update id="update" parameterType="com.example.commonsystem.genomics.dto.SampleDtos$SampleUpdateCommand">
+    UPDATE genomic_samples
+       SET sample_type = #{sampleType},
+           panel_id    = #{panelId},
+           note        = #{note},
+           updated_at  = NOW()
+     WHERE sample_id = #{sampleId}
+  </update>
+
+  <update id="updateStatus">
+    UPDATE genomic_samples
+       SET status = #{status},
+           completed_date = CASE WHEN #{status} IN ('COMPLETED', 'REPORTED') THEN CURRENT_DATE ELSE completed_date END,
+           updated_at = NOW()
+     WHERE sample_id = #{sampleId}
+  </update>
+
+  <delete id="delete">
+    DELETE FROM genomic_samples WHERE sample_id = #{sampleId}
+  </delete>
+
+</mapper>

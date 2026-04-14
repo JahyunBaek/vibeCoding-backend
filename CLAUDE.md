@@ -131,3 +131,9 @@ V1~V15. 새 마이그레이션 추가 시 `V{N+1}__설명.sql`. 스키마: `test
 6. 권한: `@RequiresAction` 필요 시 적용
 7. Swagger: `@Tag`, `@Operation` 적용
 8. 프론트: `src/lib/api/{domain}.ts` + `index.ts` 등록
+
+## 브랜치 전략
+
+- 큰 단위의 신규 기능 개발 시 `feature/xxxx` 브랜치(원격 포함)를 생성하여 개발 및 테스트한다.
+- 문제없으면 `dev` 브랜치에 merge 한다.
+- `main` 브랜치로의 merge는 **사용자가 직접** 진행한다. (Claude가 main에 merge하지 않는다.)
