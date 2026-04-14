@@ -107,35 +107,44 @@ COMMENT ON TABLE  variants            IS '검출 변이';
 COMMENT ON COLUMN variants.acmg_class IS 'ACMG 5단계: PATHOGENIC, LIKELY_PATHOGENIC, VUS, LIKELY_BENIGN, BENIGN';
 
 -- ── 5. 공통코드 등록 ────────────────────────────────────────
-INSERT INTO common_codes (tenant_id, group_key, code, name, sort_order, use_yn)
-VALUES
+-- code_groups 등록
+INSERT INTO code_groups (group_key, group_name, use_yn, tenant_id) VALUES
+    ('SAMPLE_TYPE',    '검체 유형',       TRUE, 1),
+    ('SAMPLE_STATUS',  '샘플 상태',       TRUE, 1),
+    ('VARIANT_TYPE',   '변이 유형',       TRUE, 1),
+    ('ACMG_CLASS',     'ACMG 분류',       TRUE, 1),
+    ('PANEL_CATEGORY', '패널 카테고리',   TRUE, 1)
+ON CONFLICT DO NOTHING;
+
+-- codes 등록
+INSERT INTO codes (group_key, code, name, value, sort_order, use_yn, tenant_id) VALUES
     -- 검체 유형
-    (1, 'SAMPLE_TYPE', 'BLOOD',   '혈액',   1, TRUE),
-    (1, 'SAMPLE_TYPE', 'TISSUE',  '조직',   2, TRUE),
-    (1, 'SAMPLE_TYPE', 'SALIVA',  '타액',   3, TRUE),
-    (1, 'SAMPLE_TYPE', 'OTHER',   '기타',   4, TRUE),
+    ('SAMPLE_TYPE', 'BLOOD',   '혈액',   'BLOOD',   1, TRUE, 1),
+    ('SAMPLE_TYPE', 'TISSUE',  '조직',   'TISSUE',  2, TRUE, 1),
+    ('SAMPLE_TYPE', 'SALIVA',  '타액',   'SALIVA',  3, TRUE, 1),
+    ('SAMPLE_TYPE', 'OTHER',   '기타',   'OTHER',   4, TRUE, 1),
     -- 샘플 상태
-    (1, 'SAMPLE_STATUS', 'RECEIVED',   '접수',     1, TRUE),
-    (1, 'SAMPLE_STATUS', 'EXTRACTED',  '추출완료', 2, TRUE),
-    (1, 'SAMPLE_STATUS', 'SEQUENCING', '시퀀싱중', 3, TRUE),
-    (1, 'SAMPLE_STATUS', 'ANALYZING',  '분석중',   4, TRUE),
-    (1, 'SAMPLE_STATUS', 'COMPLETED',  '분석완료', 5, TRUE),
-    (1, 'SAMPLE_STATUS', 'REPORTED',   '보고완료', 6, TRUE),
+    ('SAMPLE_STATUS', 'RECEIVED',   '접수',     'RECEIVED',   1, TRUE, 1),
+    ('SAMPLE_STATUS', 'EXTRACTED',  '추출완료', 'EXTRACTED',  2, TRUE, 1),
+    ('SAMPLE_STATUS', 'SEQUENCING', '시퀀싱중', 'SEQUENCING', 3, TRUE, 1),
+    ('SAMPLE_STATUS', 'ANALYZING',  '분석중',   'ANALYZING',  4, TRUE, 1),
+    ('SAMPLE_STATUS', 'COMPLETED',  '분석완료', 'COMPLETED',  5, TRUE, 1),
+    ('SAMPLE_STATUS', 'REPORTED',   '보고완료', 'REPORTED',   6, TRUE, 1),
     -- 변이 유형
-    (1, 'VARIANT_TYPE', 'SNV',   'SNV',   1, TRUE),
-    (1, 'VARIANT_TYPE', 'INDEL', 'InDel', 2, TRUE),
-    (1, 'VARIANT_TYPE', 'CNV',   'CNV',   3, TRUE),
-    (1, 'VARIANT_TYPE', 'SV',    'SV',    4, TRUE),
+    ('VARIANT_TYPE', 'SNV',   'SNV',   'SNV',   1, TRUE, 1),
+    ('VARIANT_TYPE', 'INDEL', 'InDel', 'INDEL', 2, TRUE, 1),
+    ('VARIANT_TYPE', 'CNV',   'CNV',   'CNV',   3, TRUE, 1),
+    ('VARIANT_TYPE', 'SV',    'SV',    'SV',    4, TRUE, 1),
     -- ACMG 분류
-    (1, 'ACMG_CLASS', 'PATHOGENIC',        'Pathogenic',        1, TRUE),
-    (1, 'ACMG_CLASS', 'LIKELY_PATHOGENIC', 'Likely Pathogenic', 2, TRUE),
-    (1, 'ACMG_CLASS', 'VUS',              'VUS',               3, TRUE),
-    (1, 'ACMG_CLASS', 'LIKELY_BENIGN',    'Likely Benign',     4, TRUE),
-    (1, 'ACMG_CLASS', 'BENIGN',           'Benign',            5, TRUE),
+    ('ACMG_CLASS', 'PATHOGENIC',        'Pathogenic',        'PATHOGENIC',        1, TRUE, 1),
+    ('ACMG_CLASS', 'LIKELY_PATHOGENIC', 'Likely Pathogenic', 'LIKELY_PATHOGENIC', 2, TRUE, 1),
+    ('ACMG_CLASS', 'VUS',              'VUS',               'VUS',               3, TRUE, 1),
+    ('ACMG_CLASS', 'LIKELY_BENIGN',    'Likely Benign',     'LIKELY_BENIGN',     4, TRUE, 1),
+    ('ACMG_CLASS', 'BENIGN',           'Benign',            'BENIGN',            5, TRUE, 1),
     -- 패널 카테고리
-    (1, 'PANEL_CATEGORY', 'TARGETED', 'Targeted Panel', 1, TRUE),
-    (1, 'PANEL_CATEGORY', 'WES',      'Whole Exome',    2, TRUE),
-    (1, 'PANEL_CATEGORY', 'WGS',      'Whole Genome',   3, TRUE)
+    ('PANEL_CATEGORY', 'TARGETED', 'Targeted Panel', 'TARGETED', 1, TRUE, 1),
+    ('PANEL_CATEGORY', 'WES',      'Whole Exome',    'WES',      2, TRUE, 1),
+    ('PANEL_CATEGORY', 'WGS',      'Whole Genome',   'WGS',      3, TRUE, 1)
 ON CONFLICT DO NOTHING;
 
 -- ── 6. 메뉴 등록 ────────────────────────────────────────────

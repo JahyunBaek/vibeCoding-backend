@@ -20,26 +20,30 @@ public class PanelDtos {
         LocalDateTime createdAt
     ) {}
 
-    // ── 단건 조회 (유전자 목록 포함) ──
-    public record PanelDetail(
-        long panelId,
-        String panelCode,
-        String name,
-        String description,
-        String category,
-        int geneCount,
-        boolean useYn,
-        LocalDateTime createdAt,
-        LocalDateTime updatedAt,
-        List<PanelGeneItem> genes
-    ) {}
+    // ── 단건 조회 (유전자 목록 포함, MyBatis collection 매핑에 setter 필요) ──
+    @Getter @Setter
+    @NoArgsConstructor
+    public static class PanelDetail {
+        private long panelId;
+        private String panelCode;
+        private String name;
+        private String description;
+        private String category;
+        private int geneCount;
+        private boolean useYn;
+        private LocalDateTime createdAt;
+        private LocalDateTime updatedAt;
+        private List<PanelGeneItem> genes;
+    }
 
-    public record PanelGeneItem(
-        long panelGeneId,
-        String geneSymbol,
-        String chromosome,
-        String description
-    ) {}
+    @Getter @Setter
+    @NoArgsConstructor
+    public static class PanelGeneItem {
+        private long panelGeneId;
+        private String geneSymbol;
+        private String chromosome;
+        private String description;
+    }
 
     // ── 생성 ──
     @Getter @Setter
