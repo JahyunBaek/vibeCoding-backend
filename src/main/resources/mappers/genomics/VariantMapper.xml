@@ -103,4 +103,25 @@
     DELETE FROM variants WHERE variant_id = #{variantId}
   </delete>
 
+  <delete id="deleteBySampleId">
+    DELETE FROM variants WHERE sample_id = #{sampleId}
+  </delete>
+
+  <select id="countBySample" resultType="int">
+    SELECT COUNT(*) FROM variants WHERE sample_id = #{sampleId}
+  </select>
+
+  <insert id="insertBatch">
+    INSERT INTO variants (sample_id, tenant_id, gene_symbol, chromosome, position,
+           ref_allele, alt_allele, variant_type, zygosity, quality, read_depth, allele_freq,
+           hgvs_c, hgvs_p, consequence, impact, acmg_class, clinvar_id, gnomad_af, cosmic_id)
+    VALUES
+    <foreach collection="list" item="v" separator=",">
+      (#{v.sampleId}, #{v.tenantId}, #{v.geneSymbol}, #{v.chromosome}, #{v.position},
+       #{v.refAllele}, #{v.altAllele}, #{v.variantType}, #{v.zygosity}, #{v.quality},
+       #{v.readDepth}, #{v.alleleFreq}, #{v.hgvsC}, #{v.hgvsP}, #{v.consequence},
+       #{v.impact}, #{v.acmgClass}, #{v.clinvarId}, #{v.gnomadAf}, #{v.cosmicId})
+    </foreach>
+  </insert>
+
 </mapper>

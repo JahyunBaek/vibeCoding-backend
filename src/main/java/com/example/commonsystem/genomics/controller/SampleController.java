@@ -6,15 +6,19 @@ import com.example.commonsystem.genomics.dto.SampleDtos.SampleDetail;
 import com.example.commonsystem.genomics.dto.SampleDtos.SampleListRow;
 import com.example.commonsystem.genomics.dto.SampleDtos.StatusUpdateRequest;
 import com.example.commonsystem.genomics.service.SampleService;
+import com.example.commonsystem.genomics.service.VcfUploadService;
 import com.example.commonsystem.security.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @Tag(name = "Genomic Samples", description = "유전체 분석 샘플 관리")
 @RequiredArgsConstructor
@@ -23,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 public class SampleController {
 
     private final SampleService sampleService;
+    private final VcfUploadService vcfUploadService;
 
     @Operation(summary = "샘플 목록 조회")
     @GetMapping
@@ -63,6 +68,15 @@ public class SampleController {
                                           @Valid @RequestBody StatusUpdateRequest req) {
         sampleService.updateStatus(sampleId, req.status());
         return ApiResponse.ok();
+    }
+
+    @Operation(summary = "VCF 파일 업로드 → 변이 데이터 적재")
+    @PostMapping(value = "/{sampleId}/vcf", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<Map<String, Object>> uploadVcf(
+            @PathVariable long sampleId,
+            @RequestPart("file") MultipartFile file) {
+        int count = vcfUploadService.uploadAndParse(sampleId, file);
+        return ApiResponse.ok(Map.of("sampleId", sampleId, "variantCount", count));
     }
 
     @Operation(summary = "샘플 삭제")

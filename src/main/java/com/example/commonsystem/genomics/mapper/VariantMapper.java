@@ -3,6 +3,7 @@ package com.example.commonsystem.genomics.mapper;
 import com.example.commonsystem.genomics.dto.VariantDtos.VariantDetail;
 import com.example.commonsystem.genomics.dto.VariantDtos.VariantFilter;
 import com.example.commonsystem.genomics.dto.VariantDtos.VariantListRow;
+import com.example.commonsystem.genomics.domain.Variant;
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -20,4 +21,10 @@ public interface VariantMapper {
     VariantDetail findById(@Param("variantId") long variantId);
 
     void delete(@Param("variantId") long variantId);
+
+    void deleteBySampleId(@Param("sampleId") long sampleId);
+
+    void insertBatch(@Param("list") List<Variant> variants);
+
+    int countBySample(@Param("sampleId") long sampleId);
 }
