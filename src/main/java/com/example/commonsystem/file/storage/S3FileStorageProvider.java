@@ -1,8 +1,7 @@
 package com.example.commonsystem.file.storage;
 
-import com.example.commonsystem.common.ErrorCode;
-import com.example.commonsystem.common.exception.AppException;
 import java.io.InputStream;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.InputStreamResource;
@@ -12,9 +11,12 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
+/**
+ * AWS S3 기반 저장소. dev, prod 프로필에서 활성화.
+ */
+@Slf4j
 @Component
 @Profile({"dev", "prod"})
 public class S3FileStorageProvider implements FileStorageProvider {
@@ -29,48 +31,51 @@ public class S3FileStorageProvider implements FileStorageProvider {
             @Value("${app.s3.cdn-base-url:}") String cdnBaseUrl) {
         this.s3Client = s3Client;
         this.bucket = bucket;
-        this.cdnBaseUrl = cdnBaseUrl.endsWith("/")
-                ? cdnBaseUrl.substring(0, cdnBaseUrl.length() - 1)
-                : cdnBaseUrl;
+        this.cdnBaseUrl = cdnBaseUrl;
     }
 
     @Override
     public void store(String key, InputStream stream, long size, String contentType) {
-        PutObjectRequest request = PutObjectRequest.builder()
+        PutObjectRequest req = PutObjectRequest.builder()
                 .bucket(bucket)
                 .key(key)
                 .contentType(contentType)
                 .build();
-        s3Client.putObject(request, RequestBody.fromInputStream(stream, size));
+        s3Client.putObject(req, RequestBody.fromInputStream(stream, size));
+        log.debug("[S3] Stored: s3://{}/{}", bucket, key);
     }
 
     @Override
     public Resource load(String key) {
-        try {
-            GetObjectRequest request = GetObjectRequest.builder()
-                    .bucket(bucket)
-                    .key(key)
-                    .build();
-            return new InputStreamResource(s3Client.getObject(request));
-        } catch (NoSuchKeyException e) {
-            throw new AppException(ErrorCode.NOT_FOUND, "File not found: " + key);
-        }
+        GetObjectRequest req = GetObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .build();
+        InputStream stream = s3Client.getObject(req);
+        return new InputStreamResource(stream);
     }
 
     @Override
     public void delete(String key) {
-        DeleteObjectRequest request = DeleteObjectRequest.builder()
-                .bucket(bucket)
-                .key(key)
-                .build();
-        s3Client.deleteObject(request);
+        try {
+            DeleteObjectRequest req = DeleteObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .build();
+            s3Client.deleteObject(req);
+            log.debug("[S3] Deleted: s3://{}/{}", bucket, key);
+        } catch (Exception e) {
+            log.warn("[S3] Delete failed: s3://{}/{}", bucket, key, e);
+        }
     }
 
     @Override
     public String resolvePublicUrl(String key) {
-        if (!cdnBaseUrl.isBlank()) {
-            return cdnBaseUrl + "/" + key;
+        if (cdnBaseUrl != null && !cdnBaseUrl.isBlank()) {
+            // CloudFront CDN 사용
+            return cdnBaseUrl.replaceAll("/+$", "") + "/" + key;
         }
-        return String.format("https://%s.s3.amazonaws.com/%s", bucket, key);
+        // S3 직접 URL
+        return "https://" + bucket + ".s3.amazonaws.com/" + key;
     }
 }
