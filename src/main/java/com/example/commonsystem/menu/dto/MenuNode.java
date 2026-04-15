@@ -1,8 +1,9 @@
 package com.example.commonsystem.menu.dto;
 
-import com.example.commonsystem.menu.domain.Menu;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.example.commonsystem.menu.domain.Menu;
 
 public class MenuNode {
   public long menuId;

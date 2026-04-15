@@ -1,10 +1,12 @@
 package com.example.commonsystem.genomics.mapper;
 
-import com.example.commonsystem.genomics.dto.PgxDtos.PgxListRow;
-import com.example.commonsystem.genomics.dto.PgxDtos.PgxMatch;
 import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+
+import com.example.commonsystem.genomics.dto.PgxDtos.PgxListRow;
+import com.example.commonsystem.genomics.dto.PgxDtos.PgxMatch;
 
 @Mapper
 public interface PgxMapper {

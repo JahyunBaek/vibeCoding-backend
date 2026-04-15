@@ -1,10 +1,13 @@
 package com.example.commonsystem.sample.controller;
 
+import java.util.*;
+
+import org.springframework.web.bind.annotation.*;
+
 import com.example.commonsystem.common.ApiResponse;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.util.*;
-import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "샘플 데이터", description = "의료 샘플 데이터 (Mock)")
 @RestController

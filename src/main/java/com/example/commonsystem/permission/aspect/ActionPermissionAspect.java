@@ -1,10 +1,11 @@
 package com.example.commonsystem.permission.aspect;
 
-import com.example.commonsystem.permission.annotation.RequiresAction;
-import com.example.commonsystem.permission.service.PermissionService;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.springframework.stereotype.Component;
+
+import com.example.commonsystem.permission.annotation.RequiresAction;
+import com.example.commonsystem.permission.service.PermissionService;
 
 @Aspect
 @Component

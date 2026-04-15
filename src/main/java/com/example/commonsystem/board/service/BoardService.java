@@ -1,5 +1,10 @@
 package com.example.commonsystem.board.service;
 
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.example.commonsystem.board.domain.Board;
 import com.example.commonsystem.board.dto.BoardCreateCommand;
 import com.example.commonsystem.board.dto.BoardListRow;
@@ -11,9 +16,6 @@ import com.example.commonsystem.menu.domain.Menu;
 import com.example.commonsystem.menu.dto.MenuCreateCommand;
 import com.example.commonsystem.menu.dto.MenuUpdateCommand;
 import com.example.commonsystem.menu.mapper.MenuMapper;
-import java.util.List;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class BoardService {

@@ -1,16 +1,20 @@
 package com.example.commonsystem.permission.controller;
 
+import java.util.List;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
 import com.example.commonsystem.common.ApiResponse;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import com.example.commonsystem.permission.domain.Screen;
 import com.example.commonsystem.permission.domain.ScreenAction;
 import com.example.commonsystem.permission.service.PermissionService;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import java.util.List;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Tag(name = "관리자 - 권한", description = "화면/액션 권한 관리")
 @RestController

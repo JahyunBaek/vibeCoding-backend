@@ -1,14 +1,17 @@
 package com.example.commonsystem.permission.controller;
 
-import com.example.commonsystem.common.ApiResponse;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import com.example.commonsystem.permission.dto.UserPermission;
-import com.example.commonsystem.permission.service.PermissionService;
 import java.util.List;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.example.commonsystem.common.ApiResponse;
+import com.example.commonsystem.permission.dto.UserPermission;
+import com.example.commonsystem.permission.service.PermissionService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Tag(name = "권한", description = "사용자 권한 조회")
 @RestController

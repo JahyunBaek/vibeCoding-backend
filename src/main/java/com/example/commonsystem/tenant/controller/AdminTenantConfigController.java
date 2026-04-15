@@ -1,14 +1,17 @@
 package com.example.commonsystem.tenant.controller;
 
-import com.example.commonsystem.common.ApiResponse;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import com.example.commonsystem.tenant.domain.TenantConfig;
-import com.example.commonsystem.tenant.service.TenantConfigService;
 import java.util.List;
 import java.util.Map;
+
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import com.example.commonsystem.common.ApiResponse;
+import com.example.commonsystem.tenant.domain.TenantConfig;
+import com.example.commonsystem.tenant.service.TenantConfigService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Tag(name = "관리자 - 설정", description = "테넌트 설정 관리")
 @RestController

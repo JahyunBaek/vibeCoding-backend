@@ -1,9 +1,11 @@
 package com.example.commonsystem.tenant.mapper;
 
-import com.example.commonsystem.tenant.domain.TenantConfig;
 import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+
+import com.example.commonsystem.tenant.domain.TenantConfig;
 
 @Mapper
 public interface TenantConfigMapper {

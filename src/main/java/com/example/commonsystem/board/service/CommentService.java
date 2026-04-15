@@ -1,5 +1,10 @@
 package com.example.commonsystem.board.service;
 
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.example.commonsystem.board.domain.Comment;
 import com.example.commonsystem.board.dto.CommentCreateCommand;
 import com.example.commonsystem.board.dto.PostDetail;
@@ -9,9 +14,6 @@ import com.example.commonsystem.common.ErrorCode;
 import com.example.commonsystem.common.exception.AppException;
 import com.example.commonsystem.notification.service.NotificationService;
 import com.example.commonsystem.tenant.service.TenantConfigService;
-import java.util.List;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CommentService {

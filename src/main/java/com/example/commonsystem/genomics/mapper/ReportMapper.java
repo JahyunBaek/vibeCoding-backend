@@ -1,10 +1,12 @@
 package com.example.commonsystem.genomics.mapper;
 
-import com.example.commonsystem.genomics.dto.ReportDtos.ReportDetail;
-import com.example.commonsystem.genomics.dto.ReportDtos.ReportListRow;
 import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+
+import com.example.commonsystem.genomics.dto.ReportDtos.ReportDetail;
+import com.example.commonsystem.genomics.dto.ReportDtos.ReportListRow;
 
 @Mapper
 public interface ReportMapper {

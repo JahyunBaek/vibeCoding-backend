@@ -8,6 +8,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ./gradlew bootRun --args='--spring.profiles.active=local'   # 로컬 실행
 ./gradlew clean bootJar                                       # 빌드
 docker compose up --build                                     # Docker 실행
+./gradlew spotlessCheck                                       # 포맷 검사
+./gradlew spotlessApply                                       # 포맷 자동 적용
+./gradlew compileJava spotlessCheck                           # 컴파일 + 포맷 검사
 ```
 
 - Backend: http://localhost:28080

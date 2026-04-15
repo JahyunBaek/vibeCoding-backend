@@ -1,14 +1,11 @@
 package com.example.commonsystem.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
+import java.io.IOException;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
-
-import java.io.IOException;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -17,6 +14,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component

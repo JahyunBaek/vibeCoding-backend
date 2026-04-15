@@ -1,12 +1,14 @@
 package com.example.commonsystem.genomics.mapper;
 
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import com.example.commonsystem.genomics.domain.Variant;
 import com.example.commonsystem.genomics.dto.VariantDtos.VariantDetail;
 import com.example.commonsystem.genomics.dto.VariantDtos.VariantFilter;
 import com.example.commonsystem.genomics.dto.VariantDtos.VariantListRow;
-import com.example.commonsystem.genomics.domain.Variant;
-import java.util.List;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface VariantMapper {

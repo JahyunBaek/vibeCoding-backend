@@ -1,14 +1,17 @@
 package com.example.commonsystem.genomics.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
 import com.example.commonsystem.agent.service.AgentChatProvider;
 import com.example.commonsystem.genomics.dto.VariantDtos.VariantDetail;
 import com.example.commonsystem.genomics.dto.VariantDtos.VariantListRow;
 import com.example.commonsystem.genomics.mapper.VariantMapper;
-import java.util.List;
-import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
 /**
  * Gemini 기반 유전체 AI 분석 서비스.

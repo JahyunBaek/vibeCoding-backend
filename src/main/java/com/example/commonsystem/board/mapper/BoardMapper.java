@@ -1,12 +1,14 @@
 package com.example.commonsystem.board.mapper;
 
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
 import com.example.commonsystem.board.domain.Board;
 import com.example.commonsystem.board.dto.BoardCreateCommand;
 import com.example.commonsystem.board.dto.BoardListRow;
 import com.example.commonsystem.board.dto.BoardUpdateCommand;
-import java.util.List;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface BoardMapper {

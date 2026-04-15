@@ -1,10 +1,12 @@
 package com.example.commonsystem.permission.mapper;
 
-import com.example.commonsystem.permission.domain.Screen;
-import com.example.commonsystem.permission.domain.ScreenAction;
+import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-import java.util.List;
+
+import com.example.commonsystem.permission.domain.Screen;
+import com.example.commonsystem.permission.domain.ScreenAction;
 
 @Mapper
 public interface PermissionMapper {

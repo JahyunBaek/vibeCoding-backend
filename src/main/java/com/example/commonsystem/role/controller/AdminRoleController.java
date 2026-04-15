@@ -1,17 +1,21 @@
 package com.example.commonsystem.role.controller;
 
+import java.util.List;
+
+import jakarta.validation.Valid;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
 import com.example.commonsystem.common.ApiResponse;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import com.example.commonsystem.common.PageResponse;
 import com.example.commonsystem.role.domain.Role;
 import com.example.commonsystem.role.dto.RoleCreateCommand;
 import com.example.commonsystem.role.dto.RoleUpdateCommand;
 import com.example.commonsystem.role.service.RoleService;
-import jakarta.validation.Valid;
-import java.util.List;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Tag(name = "관리자 - 역할", description = "역할 관리")
 @RestController

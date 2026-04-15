@@ -1,12 +1,16 @@
 package com.example.commonsystem.common;
 
-import com.example.commonsystem.config.MailProperties;
-import jakarta.mail.internet.MimeMessage;
 import java.util.Locale;
-import lombok.extern.slf4j.Slf4j;
+
+import jakarta.mail.internet.MimeMessage;
+
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+
+import com.example.commonsystem.config.MailProperties;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service

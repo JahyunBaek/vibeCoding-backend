@@ -1,5 +1,10 @@
 package com.example.commonsystem.genomics.controller;
 
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.web.bind.annotation.*;
+
 import com.example.commonsystem.common.ApiResponse;
 import com.example.commonsystem.common.TenantContextHolder;
 import com.example.commonsystem.genomics.dto.VariantDtos.VariantDetail;
@@ -7,12 +12,10 @@ import com.example.commonsystem.genomics.dto.VariantDtos.VariantFilter;
 import com.example.commonsystem.genomics.dto.VariantDtos.VariantListRow;
 import com.example.commonsystem.genomics.mapper.VariantMapper;
 import com.example.commonsystem.genomics.service.GenomicsAiService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.util.List;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Genomics AI", description = "AI 기반 유전체 분석")
 @RequiredArgsConstructor

@@ -1,12 +1,14 @@
 package com.example.commonsystem.tenant.mapper;
 
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
 import com.example.commonsystem.tenant.domain.Tenant;
 import com.example.commonsystem.tenant.dto.TenantCreateCommand;
 import com.example.commonsystem.tenant.dto.TenantListRow;
 import com.example.commonsystem.tenant.dto.TenantUpdateCommand;
-import java.util.List;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface TenantMapper {

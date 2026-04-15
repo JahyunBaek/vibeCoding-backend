@@ -1,9 +1,11 @@
 package com.example.commonsystem.audit.mapper;
 
-import com.example.commonsystem.audit.domain.AuditLog;
 import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+
+import com.example.commonsystem.audit.domain.AuditLog;
 
 @Mapper
 public interface AuditLogMapper {

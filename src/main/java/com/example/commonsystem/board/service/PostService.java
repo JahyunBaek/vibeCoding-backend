@@ -1,18 +1,20 @@
 package com.example.commonsystem.board.service;
 
-import com.example.commonsystem.board.dto.PostCreateCommand;
-import com.example.commonsystem.board.dto.PostDetail;
-import com.example.commonsystem.board.dto.PostListRow;
-import com.example.commonsystem.board.dto.PostUpdateCommand;
-import com.example.commonsystem.board.mapper.PostMapper;
-import com.example.commonsystem.common.PageResponse;
 import java.util.List;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.safety.Safelist;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.example.commonsystem.board.dto.PostCreateCommand;
+import com.example.commonsystem.board.dto.PostDetail;
+import com.example.commonsystem.board.dto.PostListRow;
+import com.example.commonsystem.board.dto.PostUpdateCommand;
+import com.example.commonsystem.board.mapper.PostMapper;
+import com.example.commonsystem.common.PageResponse;
 
 @Service
 public class PostService {

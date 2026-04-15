@@ -1,12 +1,14 @@
 package com.example.commonsystem.board.mapper;
 
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
 import com.example.commonsystem.board.dto.PostCreateCommand;
 import com.example.commonsystem.board.dto.PostDetail;
 import com.example.commonsystem.board.dto.PostListRow;
 import com.example.commonsystem.board.dto.PostUpdateCommand;
-import java.util.List;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface PostMapper {

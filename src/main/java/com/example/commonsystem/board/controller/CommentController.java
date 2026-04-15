@@ -1,18 +1,22 @@
 package com.example.commonsystem.board.controller;
 
+import java.util.List;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
 import com.example.commonsystem.board.domain.Comment;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import com.example.commonsystem.board.service.CommentService;
 import com.example.commonsystem.common.ApiResponse;
 import com.example.commonsystem.permission.annotation.RequiresAction;
 import com.example.commonsystem.security.UserPrincipal;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-import java.util.List;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Tag(name = "댓글", description = "댓글 CRUD")
 @RestController

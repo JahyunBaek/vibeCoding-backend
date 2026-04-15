@@ -1,12 +1,15 @@
 package com.example.commonsystem.code.controller;
 
+import java.util.List;
+
+import org.springframework.web.bind.annotation.*;
+
 import com.example.commonsystem.code.domain.CodeItem;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import com.example.commonsystem.code.service.CodeService;
 import com.example.commonsystem.common.ApiResponse;
-import java.util.List;
-import org.springframework.web.bind.annotation.*;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Tag(name = "공통코드", description = "공통코드 조회")
 @RestController

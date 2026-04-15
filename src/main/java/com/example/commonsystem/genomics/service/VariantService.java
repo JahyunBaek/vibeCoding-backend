@@ -1,14 +1,17 @@
 package com.example.commonsystem.genomics.service;
 
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
 import com.example.commonsystem.common.PageResponse;
 import com.example.commonsystem.common.TenantContextHolder;
 import com.example.commonsystem.genomics.dto.VariantDtos.VariantDetail;
 import com.example.commonsystem.genomics.dto.VariantDtos.VariantFilter;
 import com.example.commonsystem.genomics.dto.VariantDtos.VariantListRow;
 import com.example.commonsystem.genomics.mapper.VariantMapper;
-import java.util.List;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
 @Service

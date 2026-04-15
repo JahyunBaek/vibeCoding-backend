@@ -1,6 +1,7 @@
 package com.example.commonsystem.common;
 
 import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 @Service

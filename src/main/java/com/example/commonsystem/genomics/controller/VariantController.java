@@ -1,15 +1,17 @@
 package com.example.commonsystem.genomics.controller;
 
+import org.springframework.web.bind.annotation.*;
+
 import com.example.commonsystem.common.ApiResponse;
 import com.example.commonsystem.common.PageResponse;
 import com.example.commonsystem.genomics.dto.VariantDtos.VariantDetail;
 import com.example.commonsystem.genomics.dto.VariantDtos.VariantFilter;
 import com.example.commonsystem.genomics.dto.VariantDtos.VariantListRow;
 import com.example.commonsystem.genomics.service.VariantService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Variants", description = "변이 데이터 조회/필터링")
 @RequiredArgsConstructor

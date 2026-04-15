@@ -1,5 +1,14 @@
 package com.example.commonsystem.permission.service;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.example.commonsystem.common.ErrorCode;
 import com.example.commonsystem.common.TenantContextHolder;
 import com.example.commonsystem.common.exception.AppException;
@@ -8,13 +17,6 @@ import com.example.commonsystem.permission.domain.ScreenAction;
 import com.example.commonsystem.permission.dto.UserPermission;
 import com.example.commonsystem.permission.mapper.PermissionMapper;
 import com.example.commonsystem.security.UserPrincipal;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PermissionService {

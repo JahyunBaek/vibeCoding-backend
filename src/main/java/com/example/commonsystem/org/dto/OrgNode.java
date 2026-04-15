@@ -1,8 +1,9 @@
 package com.example.commonsystem.org.dto;
 
-import com.example.commonsystem.org.domain.Org;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.example.commonsystem.org.domain.Org;
 
 public class OrgNode {
   public long orgId;

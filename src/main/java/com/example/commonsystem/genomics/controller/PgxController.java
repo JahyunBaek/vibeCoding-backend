@@ -1,15 +1,18 @@
 package com.example.commonsystem.genomics.controller;
 
+import java.util.List;
+
+import org.springframework.web.bind.annotation.*;
+
 import com.example.commonsystem.common.ApiResponse;
 import com.example.commonsystem.common.PageResponse;
 import com.example.commonsystem.genomics.dto.PgxDtos.PgxListRow;
 import com.example.commonsystem.genomics.dto.PgxDtos.PgxMatch;
 import com.example.commonsystem.genomics.service.PgxService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "PGx", description = "약물유전체 (Pharmacogenomics)")
 @RequiredArgsConstructor

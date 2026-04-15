@@ -1,6 +1,5 @@
 package com.example.commonsystem.genomics.service;
 
-import com.example.commonsystem.genomics.domain.Variant;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -9,8 +8,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
+
+import com.example.commonsystem.genomics.domain.Variant;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * VCF (Variant Call Format) 파일을 파싱하여 Variant 목록을 반환한다.

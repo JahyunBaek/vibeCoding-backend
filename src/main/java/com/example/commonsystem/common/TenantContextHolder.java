@@ -1,9 +1,10 @@
 package com.example.commonsystem.common;
 
-import com.example.commonsystem.security.UserPrincipal;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+
+import com.example.commonsystem.security.UserPrincipal;
 
 /**
  * SecurityContext에서 현재 요청의 테넌트 ID와 역할을 추출하는 유틸.

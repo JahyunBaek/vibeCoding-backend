@@ -1,19 +1,23 @@
 package com.example.commonsystem.tenant.controller;
 
+import java.util.List;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
 import com.example.commonsystem.common.ApiResponse;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import com.example.commonsystem.common.PageResponse;
 import com.example.commonsystem.tenant.domain.Tenant;
 import com.example.commonsystem.tenant.dto.TenantCreateResult;
 import com.example.commonsystem.tenant.dto.TenantListRow;
 import com.example.commonsystem.tenant.service.TenantService;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-import java.util.List;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Tag(name = "슈퍼관리자 - 테넌트", description = "테넌트 관리")
 @RestController

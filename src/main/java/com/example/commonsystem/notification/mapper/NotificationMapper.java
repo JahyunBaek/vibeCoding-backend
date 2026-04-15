@@ -1,9 +1,11 @@
 package com.example.commonsystem.notification.mapper;
 
-import com.example.commonsystem.notification.domain.Notification;
 import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+
+import com.example.commonsystem.notification.domain.Notification;
 
 @Mapper
 public interface NotificationMapper {

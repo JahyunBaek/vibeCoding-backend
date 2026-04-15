@@ -1,16 +1,19 @@
 package com.example.commonsystem.board.controller;
 
-import com.example.commonsystem.board.dto.BoardListRow;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import com.example.commonsystem.board.service.BoardService;
-import com.example.commonsystem.common.ApiResponse;
-import com.example.commonsystem.common.PageResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import com.example.commonsystem.board.dto.BoardListRow;
+import com.example.commonsystem.board.service.BoardService;
+import com.example.commonsystem.common.ApiResponse;
+import com.example.commonsystem.common.PageResponse;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Tag(name = "관리자 - 게시판", description = "게시판 관리")
 @RestController

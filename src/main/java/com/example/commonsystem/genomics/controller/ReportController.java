@@ -1,16 +1,18 @@
 package com.example.commonsystem.genomics.controller;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
 import com.example.commonsystem.common.ApiResponse;
 import com.example.commonsystem.common.PageResponse;
 import com.example.commonsystem.genomics.dto.ReportDtos.ReportDetail;
 import com.example.commonsystem.genomics.dto.ReportDtos.ReportListRow;
 import com.example.commonsystem.genomics.service.ReportService;
 import com.example.commonsystem.security.UserPrincipal;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Genomic Reports", description = "유전체 분석 보고서")
 @RequiredArgsConstructor
