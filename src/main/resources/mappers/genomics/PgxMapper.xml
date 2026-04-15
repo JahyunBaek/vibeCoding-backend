@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.commonsystem.genomics.mapper.PgxMapper">
+
+  <select id="count" resultType="long">
+    SELECT COUNT(*) FROM pgx_mappings
+     WHERE 1=1
+    <if test="tenantId != null"> AND tenant_id = #{tenantId}</if>
+    <if test="search != null and search != ''">
+       AND (gene_symbol ILIKE '%' || #{search} || '%'
+            OR drug_name ILIKE '%' || #{search} || '%')
+    </if>
+  </select>
+
+  <select id="findPage" resultType="com.example.commonsystem.genomics.dto.PgxDtos$PgxListRow">
+    SELECT pgx_id         AS pgxId,
+           gene_symbol    AS geneSymbol,
+           variant_name   AS variantName,
+           drug_name      AS drugName,
+           effect,
+           recommendation,
+           evidence_level AS evidenceLevel,
+           source
+      FROM pgx_mappings
+     WHERE 1=1
+    <if test="tenantId != null"> AND tenant_id = #{tenantId}</if>
+    <if test="search != null and search != ''">
+       AND (gene_symbol ILIKE '%' || #{search} || '%'
+            OR drug_name ILIKE '%' || #{search} || '%')
+    </if>
+     ORDER BY gene_symbol, drug_name
+     LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+  <select id="findMatchesBySample" resultType="com.example.commonsystem.genomics.dto.PgxDtos$PgxMatch">
+    SELECT p.gene_symbol    AS geneSymbol,
+           p.variant_name   AS variantName,
+           p.drug_name      AS drugName,
+           p.effect,
+           p.recommendation,
+           p.evidence_level AS evidenceLevel,
+           p.source,
+           v.variant_id     AS variantId,
+           v.acmg_class     AS acmgClass
+      FROM pgx_mappings p
+      JOIN variants v ON v.gene_symbol = p.gene_symbol AND v.sample_id = #{sampleId}
+     WHERE p.tenant_id = #{tenantId}
+     ORDER BY p.evidence_level, p.gene_symbol
+  </select>
+
+</mapper>

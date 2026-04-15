@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.commonsystem.genomics.mapper.ReportMapper">
+
+  <select id="count" resultType="long">
+    SELECT COUNT(*) FROM genomic_reports
+     WHERE 1=1
+    <if test="tenantId != null"> AND tenant_id = #{tenantId}</if>
+    <if test="sampleId != null"> AND sample_id = #{sampleId}</if>
+  </select>
+
+  <select id="findPage" resultType="com.example.commonsystem.genomics.dto.ReportDtos$ReportListRow">
+    SELECT r.report_id      AS reportId,
+           r.sample_id      AS sampleId,
+           gs.sample_no     AS sampleNo,
+           r.title,
+           r.variant_count  AS variantCount,
+           r.pathogenic_count AS pathogenicCount,
+           r.status,
+           ''               AS createdByName,
+           r.created_at     AS createdAt
+      FROM genomic_reports r
+      JOIN genomic_samples gs ON gs.sample_id = r.sample_id
+     WHERE 1=1
+    <if test="tenantId != null"> AND r.tenant_id = #{tenantId}</if>
+    <if test="sampleId != null"> AND r.sample_id = #{sampleId}</if>
+     ORDER BY r.report_id DESC
+     LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+  <select id="findById" resultType="com.example.commonsystem.genomics.dto.ReportDtos$ReportDetail">
+    SELECT r.report_id      AS reportId,
+           r.tenant_id      AS tenantId,
+           r.sample_id      AS sampleId,
+           gs.sample_no     AS sampleNo,
+           r.title,
+           r.summary,
+           r.variant_count  AS variantCount,
+           r.pathogenic_count AS pathogenicCount,
+           r.status,
+           r.created_by     AS createdBy,
+           ''               AS createdByName,
+           r.created_at     AS createdAt,
+           r.updated_at     AS updatedAt
+      FROM genomic_reports r
+      JOIN genomic_samples gs ON gs.sample_id = r.sample_id
+     WHERE r.report_id = #{reportId}
+  </select>
+
+  <insert id="insert">
+    INSERT INTO genomic_reports (tenant_id, sample_id, title, summary, variant_count, pathogenic_count, created_by)
+    VALUES (#{tenantId}, #{sampleId}, #{title}, #{summary}, #{variantCount}, #{pathogenicCount}, #{createdBy})
+  </insert>
+
+  <update id="updateStatus">
+    UPDATE genomic_reports SET status = #{status}, updated_at = NOW() WHERE report_id = #{reportId}
+  </update>
+
+  <delete id="delete">
+    DELETE FROM genomic_reports WHERE report_id = #{reportId}
+  </delete>
+
+</mapper>

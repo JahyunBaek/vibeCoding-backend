@@ -116,6 +116,7 @@ public class GeminiChatProvider implements AgentChatProvider {
                     - 전체 등록률: 78.8% (2,287/2,739명)
                     - 등록 완료(100%): CT-2024-005(COPD 흡입제), CT-2024-012(아토피 피부염)
                     """;
+            case "genomics" -> "당신은 임상유전체학(Clinical Genomics) 전문 AI입니다. ACMG 가이드라인, ClinVar, gnomAD, COSMIC 등의 지식을 활용합니다.";
             default -> "당신은 데이터 분석 전문 AI입니다.";
         };
 
