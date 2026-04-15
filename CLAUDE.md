@@ -13,6 +13,14 @@ docker compose up --build                                     # Docker 실행
 ./gradlew compileJava spotlessCheck                           # 컴파일 + 포맷 검사
 ```
 
+### 검증 스크립트
+
+```bash
+bash scripts/check.sh            # 전체 품질 검사 (spotless + compile + build)
+bash scripts/check-migration.sh  # Flyway 마이그레이션 파일명/버전/구문 검증
+bash scripts/setup.sh            # 개발 환경 초기 설정
+```
+
 - Backend: http://localhost:28080
 - Swagger UI: http://localhost:28080/swagger-ui/index.html
 - 기본 계정: `admin` / `Admin1234!`, `user` / `User1234!`
