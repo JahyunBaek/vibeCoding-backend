@@ -18,7 +18,8 @@ public interface ReportMapper {
                                  @Param("limit") int limit,
                                  @Param("offset") int offset);
 
-    ReportDetail findById(@Param("reportId") long reportId);
+    ReportDetail findById(@Param("reportId") long reportId,
+                          @Param("tenantId") Long tenantId);
 
     void insert(@Param("tenantId") Long tenantId,
                 @Param("sampleId") long sampleId,
@@ -28,7 +29,9 @@ public interface ReportMapper {
                 @Param("pathogenicCount") int pathogenicCount,
                 @Param("createdBy") Long createdBy);
 
-    void updateStatus(@Param("reportId") long reportId, @Param("status") String status);
+    void updateStatus(@Param("reportId") long reportId, @Param("status") String status,
+                      @Param("tenantId") Long tenantId);
 
-    void delete(@Param("reportId") long reportId);
+    void delete(@Param("reportId") long reportId,
+                @Param("tenantId") Long tenantId);
 }

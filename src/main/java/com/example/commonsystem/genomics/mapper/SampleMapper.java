@@ -23,16 +23,19 @@ public interface SampleMapper {
                                  @Param("limit") int limit,
                                  @Param("offset") int offset);
 
-    SampleDetail findById(@Param("sampleId") long sampleId);
+    SampleDetail findById(@Param("sampleId") long sampleId,
+                          @Param("tenantId") Long tenantId);
 
     void insert(SampleCreateCommand cmd);
 
     void update(SampleUpdateCommand cmd);
 
     void updateStatus(@Param("sampleId") long sampleId,
-                      @Param("status") String status);
+                      @Param("status") String status,
+                      @Param("tenantId") Long tenantId);
 
-    void delete(@Param("sampleId") long sampleId);
+    void delete(@Param("sampleId") long sampleId,
+                @Param("tenantId") Long tenantId);
 
     String generateSampleNo(@Param("tenantId") Long tenantId);
 }

@@ -65,6 +65,7 @@ public class PanelDtos {
     @NoArgsConstructor
     public static class PanelUpdateCommand {
         private long panelId;
+        private Long tenantId;
         private String name;
         private String description;
         private String category;

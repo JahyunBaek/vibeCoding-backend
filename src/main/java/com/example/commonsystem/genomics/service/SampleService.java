@@ -36,7 +36,7 @@ public class SampleService {
     }
 
     public SampleDetail detail(long sampleId) {
-        return sampleMapper.findById(sampleId);
+        return sampleMapper.findById(sampleId, tenantCtx.currentTenantId());
     }
 
     @Transactional
@@ -49,8 +49,10 @@ public class SampleService {
 
     @Transactional
     public void update(long sampleId, String sampleType, Long panelId, String note) {
+        Long tenantId = tenantCtx.currentTenantId();
         SampleUpdateCommand cmd = new SampleUpdateCommand();
         cmd.setSampleId(sampleId);
+        cmd.setTenantId(tenantId);
         cmd.setSampleType(sampleType);
         cmd.setPanelId(panelId);
         cmd.setNote(note);
@@ -59,11 +61,11 @@ public class SampleService {
 
     @Transactional
     public void updateStatus(long sampleId, String status) {
-        sampleMapper.updateStatus(sampleId, status);
+        sampleMapper.updateStatus(sampleId, status, tenantCtx.currentTenantId());
     }
 
     @Transactional
     public void delete(long sampleId) {
-        sampleMapper.delete(sampleId);
+        sampleMapper.delete(sampleId, tenantCtx.currentTenantId());
     }
 }

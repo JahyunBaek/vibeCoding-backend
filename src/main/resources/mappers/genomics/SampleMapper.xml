@@ -59,6 +59,7 @@
       FROM genomic_samples gs
       LEFT JOIN gene_panels gp ON gp.panel_id = gs.panel_id
      WHERE gs.sample_id = #{sampleId}
+    <if test="tenantId != null"> AND gs.tenant_id = #{tenantId}</if>
   </select>
 
   <select id="generateSampleNo" resultType="string">
@@ -92,6 +93,7 @@
            note        = #{note},
            updated_at  = NOW()
      WHERE sample_id = #{sampleId}
+    <if test="tenantId != null"> AND tenant_id = #{tenantId}</if>
   </update>
 
   <update id="updateStatus">
@@ -100,10 +102,12 @@
            completed_date = CASE WHEN #{status} IN ('COMPLETED', 'REPORTED') THEN CURRENT_DATE ELSE completed_date END,
            updated_at = NOW()
      WHERE sample_id = #{sampleId}
+    <if test="tenantId != null"> AND tenant_id = #{tenantId}</if>
   </update>
 
   <delete id="delete">
     DELETE FROM genomic_samples WHERE sample_id = #{sampleId}
+    <if test="tenantId != null"> AND tenant_id = #{tenantId}</if>
   </delete>
 
 </mapper>

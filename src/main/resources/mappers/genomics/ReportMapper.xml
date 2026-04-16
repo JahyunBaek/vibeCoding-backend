@@ -47,6 +47,7 @@
       FROM genomic_reports r
       JOIN genomic_samples gs ON gs.sample_id = r.sample_id
      WHERE r.report_id = #{reportId}
+    <if test="tenantId != null"> AND r.tenant_id = #{tenantId}</if>
   </select>
 
   <insert id="insert">
@@ -55,11 +56,14 @@
   </insert>
 
   <update id="updateStatus">
-    UPDATE genomic_reports SET status = #{status}, updated_at = NOW() WHERE report_id = #{reportId}
+    UPDATE genomic_reports SET status = #{status}, updated_at = NOW()
+     WHERE report_id = #{reportId}
+    <if test="tenantId != null"> AND tenant_id = #{tenantId}</if>
   </update>
 
   <delete id="delete">
     DELETE FROM genomic_reports WHERE report_id = #{reportId}
+    <if test="tenantId != null"> AND tenant_id = #{tenantId}</if>
   </delete>
 
 </mapper>

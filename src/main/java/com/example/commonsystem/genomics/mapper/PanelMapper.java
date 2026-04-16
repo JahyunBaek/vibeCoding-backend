@@ -21,7 +21,8 @@ public interface PanelMapper {
                                 @Param("limit") int limit,
                                 @Param("offset") int offset);
 
-    PanelDetail findById(@Param("panelId") long panelId);
+    PanelDetail findById(@Param("panelId") long panelId,
+                         @Param("tenantId") Long tenantId);
 
     List<PanelListRow> findActive(@Param("tenantId") Long tenantId);
 
@@ -29,7 +30,8 @@ public interface PanelMapper {
 
     void update(PanelUpdateCommand cmd);
 
-    void delete(@Param("panelId") long panelId);
+    void delete(@Param("panelId") long panelId,
+                @Param("tenantId") Long tenantId);
 
     void deleteGenes(@Param("panelId") long panelId);
 

@@ -32,6 +32,6 @@ public class VariantService {
     }
 
     public VariantDetail detail(long variantId) {
-        return variantMapper.findById(variantId);
+        return variantMapper.findById(variantId, tenantCtx.currentTenantId());
     }
 }

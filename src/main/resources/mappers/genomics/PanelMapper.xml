@@ -67,6 +67,7 @@
       FROM gene_panels gp
       LEFT JOIN panel_genes pg ON pg.panel_id = gp.panel_id
      WHERE gp.panel_id = #{panelId}
+    <if test="tenantId != null"> AND gp.tenant_id = #{tenantId}</if>
      ORDER BY pg.gene_symbol
   </select>
 
@@ -98,10 +99,12 @@
            use_yn = #{useYn},
            updated_at = NOW()
      WHERE panel_id = #{panelId}
+    <if test="tenantId != null"> AND tenant_id = #{tenantId}</if>
   </update>
 
   <delete id="delete">
     DELETE FROM gene_panels WHERE panel_id = #{panelId}
+    <if test="tenantId != null"> AND tenant_id = #{tenantId}</if>
   </delete>
 
   <delete id="deleteGenes">

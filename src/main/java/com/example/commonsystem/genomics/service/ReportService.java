@@ -36,7 +36,7 @@ public class ReportService {
     }
 
     public ReportDetail detail(long reportId) {
-        return reportMapper.findById(reportId);
+        return reportMapper.findById(reportId, tenantCtx.currentTenantId());
     }
 
     /**
@@ -64,11 +64,11 @@ public class ReportService {
 
     @Transactional
     public void updateStatus(long reportId, String status) {
-        reportMapper.updateStatus(reportId, status);
+        reportMapper.updateStatus(reportId, status, tenantCtx.currentTenantId());
     }
 
     @Transactional
     public void delete(long reportId) {
-        reportMapper.delete(reportId);
+        reportMapper.delete(reportId, tenantCtx.currentTenantId());
     }
 }

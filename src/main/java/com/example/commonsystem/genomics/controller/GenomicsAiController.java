@@ -30,7 +30,7 @@ public class GenomicsAiController {
     @Operation(summary = "단일 변이 AI 해석")
     @PostMapping("/interpret/{variantId}")
     public ApiResponse<Map<String, String>> interpretVariant(@PathVariable long variantId) {
-        VariantDetail v = variantMapper.findById(variantId);
+        VariantDetail v = variantMapper.findById(variantId, tenantCtx.currentTenantId());
         if (v == null) return ApiResponse.fail("NOT_FOUND", "변이를 찾을 수 없습니다.");
         String result = aiService.interpretVariant(v);
         return ApiResponse.ok(Map.of("interpretation", result));

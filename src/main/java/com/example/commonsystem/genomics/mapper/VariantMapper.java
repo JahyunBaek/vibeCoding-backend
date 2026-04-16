@@ -20,11 +20,14 @@ public interface VariantMapper {
                                   @Param("limit") int limit,
                                   @Param("offset") int offset);
 
-    VariantDetail findById(@Param("variantId") long variantId);
+    VariantDetail findById(@Param("variantId") long variantId,
+                           @Param("tenantId") Long tenantId);
 
-    void delete(@Param("variantId") long variantId);
+    void delete(@Param("variantId") long variantId,
+                @Param("tenantId") Long tenantId);
 
-    void deleteBySampleId(@Param("sampleId") long sampleId);
+    void deleteBySampleId(@Param("sampleId") long sampleId,
+                          @Param("tenantId") Long tenantId);
 
     void insertBatch(@Param("list") List<Variant> variants);
 

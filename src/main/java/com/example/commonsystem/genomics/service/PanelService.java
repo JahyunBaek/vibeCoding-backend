@@ -36,7 +36,7 @@ public class PanelService {
     }
 
     public PanelDetail detail(long panelId) {
-        return panelMapper.findById(panelId);
+        return panelMapper.findById(panelId, tenantCtx.currentTenantId());
     }
 
     public List<PanelListRow> activePanels() {
@@ -54,14 +54,16 @@ public class PanelService {
 
     @Transactional
     public void update(long panelId, PanelUpdateCommand cmd) {
+        Long tenantId = tenantCtx.currentTenantId();
         cmd.setPanelId(panelId);
+        cmd.setTenantId(tenantId);
         panelMapper.update(cmd);
         saveGenes(panelId, cmd.getGenes());
     }
 
     @Transactional
     public void delete(long panelId) {
-        panelMapper.delete(panelId);
+        panelMapper.delete(panelId, tenantCtx.currentTenantId());
     }
 
     private void saveGenes(long panelId, List<PanelGeneInput> genes) {

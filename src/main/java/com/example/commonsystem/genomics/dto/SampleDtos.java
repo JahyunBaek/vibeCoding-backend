@@ -80,6 +80,7 @@ public class SampleDtos {
     @NoArgsConstructor
     public static class SampleUpdateCommand {
         private long sampleId;
+        private Long tenantId;
         private String sampleType;
         private Long panelId;
         private String note;

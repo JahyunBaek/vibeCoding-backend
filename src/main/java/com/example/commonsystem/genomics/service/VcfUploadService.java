@@ -42,7 +42,7 @@ public class VcfUploadService {
         Long tenantId = tenantCtx.currentTenantId();
 
         // 기존 변이 삭제
-        variantMapper.deleteBySampleId(sampleId);
+        variantMapper.deleteBySampleId(sampleId, tenantId);
 
         // VCF 파싱
         List<Variant> variants;
@@ -59,7 +59,7 @@ public class VcfUploadService {
         }
 
         // 샘플 상태를 ANALYZING으로 변경 (RECEIVED/EXTRACTED/SEQUENCING 상태일 때)
-        sampleMapper.updateStatus(sampleId, "ANALYZING");
+        sampleMapper.updateStatus(sampleId, "ANALYZING", tenantId);
 
         log.info("VCF 업로드 완료: sampleId={}, variants={}", sampleId, variants.size());
         return variants.size();

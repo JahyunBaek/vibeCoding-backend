@@ -97,14 +97,17 @@
       JOIN genomic_samples gs ON gs.sample_id = v.sample_id
       LEFT JOIN gene_panels gp ON gp.panel_id = gs.panel_id
      WHERE v.variant_id = #{variantId}
+    <if test="tenantId != null"> AND v.tenant_id = #{tenantId}</if>
   </select>
 
   <delete id="delete">
     DELETE FROM variants WHERE variant_id = #{variantId}
+    <if test="tenantId != null"> AND tenant_id = #{tenantId}</if>
   </delete>
 
   <delete id="deleteBySampleId">
     DELETE FROM variants WHERE sample_id = #{sampleId}
+    <if test="tenantId != null"> AND tenant_id = #{tenantId}</if>
   </delete>
 
   <select id="countBySample" resultType="int">
