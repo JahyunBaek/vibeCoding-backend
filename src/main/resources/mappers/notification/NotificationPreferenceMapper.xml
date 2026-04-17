@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.commonsystem.notification.mapper.NotificationPreferenceMapper">
+
+  <select id="findByUser" resultType="map">
+    SELECT pref_id      AS "prefId",
+           channel,
+           enabled,
+           consented,
+           consented_at AS "consentedAt"
+      FROM notification_preferences
+     WHERE user_id = #{userId}
+    <if test="tenantId != null"> AND tenant_id = #{tenantId}</if>
+     ORDER BY
+       CASE channel WHEN 'EMAIL' THEN 1 WHEN 'SMS' THEN 2 WHEN 'KAKAO' THEN 3 WHEN 'PUSH' THEN 4 ELSE 5 END
+  </select>
+
+  <insert id="upsert">
+    INSERT INTO notification_preferences (tenant_id, user_id, channel, enabled, consented, consented_at)
+    VALUES (#{tenantId}, #{userId}, #{channel}, #{enabled}, #{consented},
+            CASE WHEN #{consented} = TRUE THEN NOW() ELSE NULL END)
+    ON CONFLICT (tenant_id, user_id, channel) DO UPDATE
+       SET enabled = #{enabled},
+           consented = #{consented},
+           consented_at = CASE WHEN #{consented} = TRUE AND notification_preferences.consented = FALSE
+                               THEN NOW()
+                               WHEN #{consented} = FALSE THEN NULL
+                               ELSE notification_preferences.consented_at END,
+           updated_at = NOW()
+  </insert>
+
+  <select id="isChannelEnabled" resultType="boolean">
+    SELECT COALESCE(
+      (SELECT enabled AND consented
+         FROM notification_preferences
+        WHERE user_id = #{userId}
+          AND channel = #{channel}
+        <if test="tenantId != null"> AND tenant_id = #{tenantId}</if>
+        LIMIT 1),
+      FALSE)
+  </select>
+
+</mapper>
