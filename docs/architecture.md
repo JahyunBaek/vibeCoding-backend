@@ -93,38 +93,14 @@ TenantContextHolder가 SecurityContext에서 tenantId 추출
 | `notification` | 인앱 알림 |
 | `audit` | 감사 로그 |
 
-### 의료/유전체 도메인
+### 확장 도메인 (예시)
 
 | 모듈 | 역할 |
 |------|------|
-| `sample` | 환자/임상시험 Mock 데이터 |
+| `sample` | 샘플 Mock 데이터 (데모용) |
 | `agent` | AI Agent 채팅 (Gemini 실연동 + Mock) |
-| `genomics` | 유전체 분석 플랫폼 (아래 상세) |
 
-### Genomics 서브모듈
-
-```
-genomics/
-├── controller/
-│   ├── SampleController      # 샘플 CRUD + VCF 업로드
-│   ├── PanelController       # 유전자 패널 CRUD
-│   ├── VariantController     # 변이 조회/필터링
-│   ├── ReportController      # 보고서 생성/조회
-│   ├── PgxController         # 약물유전체 조회/매칭
-│   └── GenomicsAiController  # AI 변이 해석/요약
-├── service/
-│   ├── SampleService         # 샘플 비즈니스 로직
-│   ├── PanelService          # 패널 + 유전자 관리
-│   ├── VariantService        # 변이 조회
-│   ├── VcfParserService      # VCF 파일 파싱 엔진
-│   ├── VcfUploadService      # VCF 업로드 → 파싱 → 적재
-│   ├── ReportService         # AI 요약 포함 보고서 생성
-│   ├── PgxService            # PGx 매칭
-│   └── GenomicsAiService     # Gemini AI 변이 해석
-├── mapper/                   # MyBatis 인터페이스
-├── domain/                   # record 엔티티
-└── dto/                      # record/Lombok DTO
-```
+> 도메인별 모듈 추가는 `CLAUDE.md`의 "새 도메인 추가 절차"를 참조.
 
 ## 외부 연동
 
@@ -142,10 +118,8 @@ genomics/
 |------|------|
 | V1 | 초기 스키마 (users, roles, orgs, menus, boards, codes) |
 | V2~V13 | 스키마 확장, 인덱스, 시드 데이터 |
-| V14 | 의료 샘플 Mock 데이터 |
+| V14 | 샘플 Mock 데이터 |
 | V15 | Analysis Agent 메뉴 |
-| V16 | Genomics Phase 1 (samples, panels, variants) |
-| V17 | Genomics Phase 3~4 (reports, pgx_mappings) |
 
 ## 코드 품질 도구
 
