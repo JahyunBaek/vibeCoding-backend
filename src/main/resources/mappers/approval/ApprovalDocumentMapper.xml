@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.commonsystem.approval.mapper.ApprovalDocumentMapper">
+
+  <!-- ============ Document ============ -->
+
+  <insert id="insertDocument">
+    INSERT INTO approval_document (
+      tenant_id, document_no, approval_code,
+      business_type, business_id, title, body,
+      requester_user_id, requester_department_id, supervising_department_id,
+      status, current_step_order, requested_at
+    ) VALUES (
+      #{tenantId}, #{documentNo}, #{approvalCode},
+      #{businessType}, #{businessId}, #{title}, #{body},
+      #{requesterUserId}, #{requesterDepartmentId}, #{supervisingDepartmentId},
+      'IN_PROGRESS', 1, NOW()
+    )
+  </insert>
+
+  <select id="currvalDocumentId" resultType="long">
+    SELECT currval(pg_get_serial_sequence('approval_document','document_id'))
+  </select>
+
+  <insert id="insertStep">
+    INSERT INTO approval_document_step (
+      document_id, step_order, step_name, approval_type,
+      target_department_type, target_department_id, target_role_key,
+      group_approval_yn, status
+    ) VALUES (
+      #{documentId}, #{s.stepOrder}, #{s.stepName},
+      COALESCE(#{s.approvalType}, 'APPROVE'),
+      #{s.targetDepartmentType}, #{s.targetDepartmentId}, #{s.targetRoleKey},
+      COALESCE(#{s.groupApprovalYn}, TRUE),
+      'PENDING'
+    )
+  </insert>
+
+  <resultMap id="StepRowMap" type="com.example.commonsystem.approval.dto.ApprovalDocumentDtos$DocumentStepRow">
+    <constructor>
+      <idArg column="step_id" javaType="long"/>
+      <arg column="step_order" javaType="int"/>
+      <arg column="step_name" javaType="String"/>
+      <arg column="approval_type" javaType="String"/>
+      <arg column="target_department_type" javaType="String"/>
+      <arg column="target_department_id" javaType="java.lang.Long"/>
+      <arg column="target_department_name" javaType="String"/>
+      <arg column="target_role_key" javaType="String"/>
+      <arg column="group_approval_yn" javaType="boolean"/>
+      <arg column="status" javaType="String"/>
+      <arg column="acted_by_user_id" javaType="java.lang.Long"/>
+      <arg column="acted_by_name" javaType="String"/>
+      <arg column="acted_at" javaType="java.time.Instant"/>
+      <arg column="comment" javaType="String"/>
+    </constructor>
+  </resultMap>
+
+  <select id="findSteps" resultMap="StepRowMap">
+    SELECT s.step_id, s.step_order, s.step_name, s.approval_type,
+           s.target_department_type, s.target_department_id,
+           o.name AS target_department_name, s.target_role_key,
+           s.group_approval_yn, s.status, s.acted_by_user_id,
+           u.name AS acted_by_name, s.acted_at, s.comment
+      FROM approval_document_step s
+      LEFT JOIN orgs o ON o.org_id = s.target_department_id
+      LEFT JOIN users u ON u.user_id = s.acted_by_user_id
+     WHERE s.document_id = #{documentId}
+     ORDER BY s.step_order
+  </select>
+
+  <select id="findNextPendingStep" resultMap="StepRowMap">
+    SELECT s.step_id, s.step_order, s.step_name, s.approval_type,
+           s.target_department_type, s.target_department_id,
+           o.name AS target_department_name, s.target_role_key,
+           s.group_approval_yn, s.status, s.acted_by_user_id,
+           u.name AS acted_by_name, s.acted_at, s.comment
+      FROM approval_document_step s
+      LEFT JOIN orgs o ON o.org_id = s.target_department_id
+      LEFT JOIN users u ON u.user_id = s.acted_by_user_id
+     WHERE s.document_id = #{documentId} AND s.status = 'PENDING'
+     ORDER BY s.step_order
+     LIMIT 1
+  </select>
+
+  <resultMap id="HistoryRowMap" type="com.example.commonsystem.approval.dto.ApprovalDocumentDtos$HistoryRow">
+    <constructor>
+      <idArg column="history_id" javaType="long"/>
+      <arg column="step_id" javaType="java.lang.Long"/>
+      <arg column="action_type" javaType="String"/>
+      <arg column="action_by" javaType="long"/>
+      <arg column="action_by_name" javaType="String"/>
+      <arg column="action_comment" javaType="String"/>
+      <arg column="action_at" javaType="java.time.Instant"/>
+      <arg column="before_status" javaType="String"/>
+      <arg column="after_status" javaType="String"/>
+    </constructor>
+  </resultMap>
+
+  <select id="findHistory" resultMap="HistoryRowMap">
+    SELECT h.history_id, h.step_id, h.action_type, h.action_by,
+           u.name AS action_by_name, h.action_comment, h.action_at,
+           h.before_status, h.after_status
+      FROM approval_history h
+      LEFT JOIN users u ON u.user_id = h.action_by
+     WHERE h.document_id = #{documentId}
+     ORDER BY h.action_at, h.history_id
+  </select>
+
+  <resultMap id="DocumentDetailMap" type="com.example.commonsystem.approval.dto.ApprovalDocumentDtos$DocumentDetail">
+    <id property="documentId" column="document_id"/>
+    <result property="tenantId" column="tenant_id"/>
+    <result property="documentNo" column="document_no"/>
+    <result property="approvalCode" column="approval_code"/>
+    <result property="approvalName" column="approval_name"/>
+    <result property="businessType" column="business_type"/>
+    <result property="businessId" column="business_id"/>
+    <result property="title" column="title"/>
+    <result property="body" column="body"/>
+    <result property="requesterUserId" column="requester_user_id"/>
+    <result property="requesterName" column="requester_name"/>
+    <result property="requesterDepartmentId" column="requester_department_id"/>
+    <result property="requesterDepartmentName" column="requester_department_name"/>
+    <result property="supervisingDepartmentId" column="supervising_department_id"/>
+    <result property="supervisingDepartmentName" column="supervising_department_name"/>
+    <result property="status" column="status"/>
+    <result property="currentStepOrder" column="current_step_order"/>
+    <result property="requestedAt" column="requested_at"/>
+    <result property="completedAt" column="completed_at"/>
+    <collection property="steps" ofType="com.example.commonsystem.approval.dto.ApprovalDocumentDtos$DocumentStepRow"
+                column="document_id" select="findSteps"/>
+    <collection property="history" ofType="com.example.commonsystem.approval.dto.ApprovalDocumentDtos$HistoryRow"
+                column="document_id" select="findHistory"/>
+  </resultMap>
+
+  <select id="findDetail" resultMap="DocumentDetailMap">
+    SELECT d.document_id, d.tenant_id, d.document_no, d.approval_code,
+           def.approval_name,
+           d.business_type, d.business_id, d.title, d.body,
+           d.requester_user_id, u.name AS requester_name,
+           d.requester_department_id, ro.name AS requester_department_name,
+           d.supervising_department_id, so.name AS supervising_department_name,
+           d.status, d.current_step_order,
+           d.requested_at, d.completed_at
+      FROM approval_document d
+      LEFT JOIN users u ON u.user_id = d.requester_user_id
+      LEFT JOIN orgs ro ON ro.org_id = d.requester_department_id
+      LEFT JOIN orgs so ON so.org_id = d.supervising_department_id
+      LEFT JOIN approval_definition def
+             ON def.tenant_id = d.tenant_id AND def.approval_code = d.approval_code
+     WHERE d.document_id = #{documentId} AND d.tenant_id = #{tenantId}
+     LIMIT 1
+  </select>
+
+  <update id="actOnStepIfPending">
+    UPDATE approval_document_step
+       SET status = #{newStatus},
+           acted_by_user_id = #{actedByUserId},
+           acted_at = NOW(),
+           comment = #{comment}
+     WHERE step_id = #{stepId}
+       AND document_id = #{documentId}
+       AND status = 'PENDING'
+  </update>
+
+  <update id="updateDocumentStatus">
+    UPDATE approval_document
+       SET status = #{status},
+           current_step_order = #{currentStepOrder},
+           completed_at = #{completedAt},
+           updated_at = NOW()
+     WHERE document_id = #{documentId} AND tenant_id = #{tenantId}
+  </update>
+
+  <update id="cancelOrWithdraw">
+    UPDATE approval_document
+       SET status = #{newStatus},
+           withdrawn_at = CASE WHEN #{newStatus} = 'WITHDRAWN' THEN #{now} ELSE withdrawn_at END,
+           canceled_at  = CASE WHEN #{newStatus} = 'CANCELED'  THEN #{now} ELSE canceled_at END,
+           updated_at = NOW()
+     WHERE document_id = #{documentId}
+       AND tenant_id = #{tenantId}
+       AND requester_user_id = #{requesterUserId}
+       AND status = #{expectedStatus}
+  </update>
+
+  <!-- ============ Inbox ============ -->
+
+  <resultMap id="DocumentListRowMap" type="com.example.commonsystem.approval.dto.ApprovalDocumentDtos$DocumentListRow">
+    <constructor>
+      <idArg column="document_id" javaType="long"/>
+      <arg column="tenant_id" javaType="long"/>
+      <arg column="document_no" javaType="String"/>
+      <arg column="approval_code" javaType="String"/>
+      <arg column="approval_name" javaType="String"/>
+      <arg column="title" javaType="String"/>
+      <arg column="requester_user_id" javaType="long"/>
+      <arg column="requester_name" javaType="String"/>
+      <arg column="requester_department_id" javaType="java.lang.Long"/>
+      <arg column="requester_department_name" javaType="String"/>
+      <arg column="supervising_department_id" javaType="java.lang.Long"/>
+      <arg column="supervising_department_name" javaType="String"/>
+      <arg column="status" javaType="String"/>
+      <arg column="current_step_order" javaType="java.lang.Integer"/>
+      <arg column="current_step_name" javaType="String"/>
+      <arg column="requested_at" javaType="java.time.Instant"/>
+      <arg column="completed_at" javaType="java.time.Instant"/>
+    </constructor>
+  </resultMap>
+
+  <sql id="inboxFilters">
+     d.tenant_id = #{tenantId}
+    <choose>
+      <when test="inbox == 'requested'">
+        AND d.requester_user_id = #{userId}
+      </when>
+      <when test="inbox == 'pending'">
+        AND d.status = 'IN_PROGRESS'
+        AND EXISTS (
+          SELECT 1
+            FROM approval_document_step s
+            JOIN users u ON u.user_id = #{userId}
+           WHERE s.document_id = d.document_id
+             AND s.status = 'PENDING'
+             AND s.step_order = d.current_step_order
+             AND (s.target_department_id IS NULL OR s.target_department_id = u.org_id)
+             AND (s.target_role_key IS NULL OR s.target_role_key = u.role_key)
+        )
+      </when>
+      <when test="inbox == 'processed'">
+        AND EXISTS (
+          SELECT 1 FROM approval_document_step s2
+           WHERE s2.document_id = d.document_id
+             AND s2.acted_by_user_id = #{userId}
+        )
+      </when>
+    </choose>
+    <if test="approvalCode != null and approvalCode != ''">
+      AND d.approval_code = #{approvalCode}
+    </if>
+    <if test="status != null and status != ''">
+      AND d.status = #{status}
+    </if>
+    <if test="keyword != null and keyword != ''">
+      AND (d.title ILIKE '%' || #{keyword} || '%' OR d.document_no ILIKE '%' || #{keyword} || '%')
+    </if>
+    <if test="fromDate != null">
+      AND d.requested_at &gt;= #{fromDate}
+    </if>
+    <if test="toDate != null">
+      AND d.requested_at &lt;= #{toDate}
+    </if>
+  </sql>
+
+  <select id="findInbox" resultMap="DocumentListRowMap">
+    SELECT d.document_id, d.tenant_id, d.document_no, d.approval_code,
+           def.approval_name, d.title,
+           d.requester_user_id, u.name AS requester_name,
+           d.requester_department_id, ro.name AS requester_department_name,
+           d.supervising_department_id, so.name AS supervising_department_name,
+           d.status, d.current_step_order,
+           (SELECT cs.step_name FROM approval_document_step cs
+             WHERE cs.document_id = d.document_id AND cs.step_order = d.current_step_order
+             LIMIT 1) AS current_step_name,
+           d.requested_at, d.completed_at
+      FROM approval_document d
+      LEFT JOIN users u ON u.user_id = d.requester_user_id
+      LEFT JOIN orgs ro ON ro.org_id = d.requester_department_id
+      LEFT JOIN orgs so ON so.org_id = d.supervising_department_id
+      LEFT JOIN approval_definition def
+             ON def.tenant_id = d.tenant_id AND def.approval_code = d.approval_code
+     WHERE <include refid="inboxFilters"/>
+     ORDER BY d.requested_at DESC NULLS LAST, d.document_id DESC
+     LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+  <select id="countInbox" resultType="long">
+    SELECT COUNT(*)
+      FROM approval_document d
+     WHERE <include refid="inboxFilters"/>
+  </select>
+
+  <!-- 단순 권한 체크: step의 대상 부서/역할에 해당 유저가 속하는지 -->
+  <select id="countActableUsers" resultType="int">
+    SELECT COUNT(*)
+      FROM approval_document_step s
+      JOIN users u ON u.user_id = #{userId}
+     WHERE s.step_id = #{stepId}
+       AND s.status = 'PENDING'
+       AND (s.target_department_id IS NULL OR s.target_department_id = u.org_id)
+       AND (s.target_role_key IS NULL OR s.target_role_key = u.role_key)
+  </select>
+
+  <insert id="insertHistory">
+    INSERT INTO approval_history (
+      tenant_id, document_id, step_id,
+      action_type, action_by, action_comment,
+      before_status, after_status
+    ) VALUES (
+      #{tenantId}, #{documentId}, #{stepId},
+      #{actionType}, #{actionBy}, #{actionComment},
+      #{beforeStatus}, #{afterStatus}
+    )
+  </insert>
+
+  <select id="findMaxDocumentSeq" resultType="java.lang.Integer">
+    SELECT COALESCE(MAX(
+      CAST(split_part(document_no, '-', 4) AS INTEGER)
+    ), 0)
+      FROM approval_document
+     WHERE tenant_id = #{tenantId}
+       AND document_no LIKE 'AP-' || #{tenantId} || '-' || #{yyyymm} || '-%'
+  </select>
+
+</mapper>

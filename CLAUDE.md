@@ -63,6 +63,7 @@ com.example.commonsystem/
 ├── dashboard/    # 대시보드 통계
 ├── sample/       # 의료 샘플 Mock 데이터
 ├── agent/        # AI Agent 채팅 (Mock)
+├── approval/     # 공통 결재(전자결재) 시스템 — approval_code 기반
 ├── invitation/   # 사용자 초대 (이메일)
 └── notification/ # 인앱 알림
 ```
@@ -120,7 +121,7 @@ public class XxxController {
 
 ### DB 마이그레이션 (Flyway)
 
-V1~V15. 새 마이그레이션 추가 시 `V{N+1}__설명.sql`. 스키마: `testdb`.
+V1~V16. 새 마이그레이션 추가 시 `V{N+1}__설명.sql`. 스키마: `testdb`.
 
 ### Redis 키 규칙
 
