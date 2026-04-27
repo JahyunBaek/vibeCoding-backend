@@ -26,28 +26,32 @@ public class ApprovalDefinitionService {
     this.tenantCtx = tenantCtx;
   }
 
+  // ── 조회는 null 허용 (SUPER_ADMIN이 테넌트 미선택 시 전체 조회) ──
+
   public List<DefinitionListRow> list(boolean activeOnly, String keyword, Long tenantIdOverride) {
-    long tid = tenantCtx.resolveTenantId(tenantIdOverride);
+    Long tid = tenantCtx.resolveTenantId(tenantIdOverride);
     return mapper.findAll(tid, activeOnly, keyword);
   }
 
   public DefinitionDetail get(long definitionId, Long tenantIdOverride) {
-    long tid = tenantCtx.resolveTenantId(tenantIdOverride);
+    Long tid = tenantCtx.resolveTenantId(tenantIdOverride);
     DefinitionDetail d = mapper.findById(definitionId, tid);
     if (d == null) throw new AppException(ErrorCode.NOT_FOUND, "결재 정책을 찾을 수 없습니다.");
     return d;
   }
 
   public DefinitionDetail getByCode(String approvalCode) {
-    long tid = tenantCtx.resolveTenantId(null);
+    Long tid = tenantCtx.resolveTenantId(null);
     DefinitionDetail d = mapper.findByCode(tid, approvalCode);
     if (d == null) throw new AppException(ErrorCode.NOT_FOUND, "결재 정책을 찾을 수 없습니다.");
     return d;
   }
 
+  // ── 쓰기 작업은 tenantId 필수 ──
+
   @Transactional
   public long create(CreateRequest req, long userId, Long tenantIdOverride) {
-    long tid = tenantCtx.resolveTenantId(tenantIdOverride);
+    long tid = requireTenant(tenantIdOverride);
     if (mapper.existsByCode(tid, req.approvalCode()) > 0) {
       throw new AppException(ErrorCode.CONFLICT, "이미 존재하는 결재 코드입니다: " + req.approvalCode());
     }
@@ -59,28 +63,39 @@ public class ApprovalDefinitionService {
 
   @Transactional
   public void update(long definitionId, UpdateRequest req, long userId, Long tenantIdOverride) {
-    long tid = tenantCtx.resolveTenantId(tenantIdOverride);
+    long tid = requireTenant(tenantIdOverride);
     int n = mapper.update(definitionId, tid, req, userId);
     if (n == 0) throw new AppException(ErrorCode.NOT_FOUND, "결재 정책을 찾을 수 없습니다.");
   }
 
   @Transactional
   public void delete(long definitionId, Long tenantIdOverride) {
-    long tid = tenantCtx.resolveTenantId(tenantIdOverride);
+    long tid = requireTenant(tenantIdOverride);
     int n = mapper.deleteById(definitionId, tid);
     if (n == 0) throw new AppException(ErrorCode.NOT_FOUND, "결재 정책을 찾을 수 없습니다.");
   }
 
   @Transactional
   public void addAuthorityRule(String approvalCode, CreateAuthorityRuleRequest req, Long tenantIdOverride) {
-    long tid = tenantCtx.resolveTenantId(tenantIdOverride);
+    long tid = requireTenant(tenantIdOverride);
     mapper.insertAuthorityRule(tid, approvalCode, req);
   }
 
   @Transactional
   public void deleteAuthorityRule(long ruleId, Long tenantIdOverride) {
-    long tid = tenantCtx.resolveTenantId(tenantIdOverride);
+    long tid = requireTenant(tenantIdOverride);
     int n = mapper.deleteAuthorityRule(ruleId, tid);
     if (n == 0) throw new AppException(ErrorCode.NOT_FOUND, "권한 규칙을 찾을 수 없습니다.");
+  }
+
+  /**
+   * 쓰기 작업 시 tenantId가 반드시 필요. SUPER_ADMIN이 테넌트 미선택 상태라면 예외.
+   */
+  private long requireTenant(Long tenantIdOverride) {
+    Long tid = tenantCtx.resolveTenantId(tenantIdOverride);
+    if (tid == null) {
+      throw new AppException(ErrorCode.VALIDATION, "테넌트를 선택해야 작업할 수 있습니다.");
+    }
+    return tid;
   }
 }

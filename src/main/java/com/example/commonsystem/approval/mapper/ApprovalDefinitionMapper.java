@@ -15,15 +15,15 @@ import com.example.commonsystem.approval.dto.ApprovalDefinitionDtos.UpdateReques
 @Mapper
 public interface ApprovalDefinitionMapper {
 
-  List<DefinitionListRow> findAll(@Param("tenantId") long tenantId,
+  List<DefinitionListRow> findAll(@Param("tenantId") Long tenantId,
                                    @Param("activeOnly") boolean activeOnly,
                                    @Param("keyword") String keyword);
 
-  DefinitionDetail findByCode(@Param("tenantId") long tenantId,
+  DefinitionDetail findByCode(@Param("tenantId") Long tenantId,
                                @Param("approvalCode") String approvalCode);
 
   DefinitionDetail findById(@Param("definitionId") long definitionId,
-                             @Param("tenantId") long tenantId);
+                             @Param("tenantId") Long tenantId);
 
   int existsByCode(@Param("tenantId") long tenantId,
                     @Param("approvalCode") String approvalCode);

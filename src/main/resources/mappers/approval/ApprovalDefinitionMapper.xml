@@ -41,7 +41,10 @@
            d.updated_at
       FROM approval_definition d
       LEFT JOIN orgs o ON o.org_id = d.default_supervising_department_id
-     WHERE d.tenant_id = #{tenantId}
+     WHERE 1=1
+    <if test="tenantId != null">
+       AND d.tenant_id = #{tenantId}
+    </if>
     <if test="activeOnly">
        AND d.active_yn = TRUE
     </if>
@@ -91,7 +94,10 @@
            d.use_group_approval, d.use_personal_line_template,
            d.active_yn, d.sort_order, d.remark
       FROM approval_definition d
-     WHERE d.tenant_id = #{tenantId} AND d.approval_code = #{approvalCode}
+     WHERE d.approval_code = #{approvalCode}
+    <if test="tenantId != null">
+       AND d.tenant_id = #{tenantId}
+    </if>
      LIMIT 1
   </select>
 
@@ -102,7 +108,10 @@
            d.use_group_approval, d.use_personal_line_template,
            d.active_yn, d.sort_order, d.remark
       FROM approval_definition d
-     WHERE d.definition_id = #{definitionId} AND d.tenant_id = #{tenantId}
+     WHERE d.definition_id = #{definitionId}
+    <if test="tenantId != null">
+       AND d.tenant_id = #{tenantId}
+    </if>
      LIMIT 1
   </select>
 
