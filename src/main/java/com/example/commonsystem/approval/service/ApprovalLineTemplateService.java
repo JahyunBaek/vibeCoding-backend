@@ -1,5 +1,6 @@
 package com.example.commonsystem.approval.service;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -27,25 +28,27 @@ public class ApprovalLineTemplateService {
   }
 
   public List<TemplateListRow> myTemplates(long userId, String approvalCode) {
-    long tid = tenantCtx.resolveTenantId(null);
+    Long tid = tenantCtx.resolveTenantId(null);
+    if (tid == null) return Collections.emptyList(); // SUPER_ADMIN은 개인 양식 없음
     return mapper.findMyTemplates(tid, userId, approvalCode);
   }
 
   public TemplateDetail detail(long templateId, long userId) {
-    long tid = tenantCtx.resolveTenantId(null);
+    long tid = requireTenant();
     TemplateDetail d = mapper.findDetail(templateId, tid, userId);
     if (d == null) throw new AppException(ErrorCode.NOT_FOUND, "결재선 양식을 찾을 수 없습니다.");
     return d;
   }
 
   public TemplateDetail defaultTemplate(long userId, String approvalCode) {
-    long tid = tenantCtx.resolveTenantId(null);
+    Long tid = tenantCtx.resolveTenantId(null);
+    if (tid == null) return null; // SUPER_ADMIN은 기본 양식 없음
     return mapper.findDefault(tid, userId, approvalCode);
   }
 
   @Transactional
   public long create(CreateRequest req, long userId) {
-    long tid = tenantCtx.resolveTenantId(null);
+    long tid = requireTenant();
     validateSteps(req.steps());
 
     if (req.defaultYn()) {
@@ -61,7 +64,7 @@ public class ApprovalLineTemplateService {
 
   @Transactional
   public void update(long templateId, UpdateRequest req, long userId) {
-    long tid = tenantCtx.resolveTenantId(null);
+    long tid = requireTenant();
     validateSteps(req.steps());
     TemplateDetail existing = mapper.findDetail(templateId, tid, userId);
     if (existing == null) throw new AppException(ErrorCode.NOT_FOUND, "결재선 양식을 찾을 수 없습니다.");
@@ -78,9 +81,19 @@ public class ApprovalLineTemplateService {
 
   @Transactional
   public void delete(long templateId, long userId) {
-    long tid = tenantCtx.resolveTenantId(null);
+    long tid = requireTenant();
     int n = mapper.deleteTemplate(templateId, tid, userId);
     if (n == 0) throw new AppException(ErrorCode.NOT_FOUND, "결재선 양식을 찾을 수 없습니다.");
+  }
+
+  /** 결재선 양식은 사용자 개인 데이터이므로 tenantId 필수. SUPER_ADMIN은 사용 불가. */
+  private long requireTenant() {
+    Long tid = tenantCtx.resolveTenantId(null);
+    if (tid == null) {
+      throw new AppException(ErrorCode.VALIDATION,
+          "SUPER_ADMIN은 개인 결재선 양식을 사용할 수 없습니다. 일반 사용자로 로그인하세요.");
+    }
+    return tid;
   }
 
   private void validateSteps(List<StepRequest> steps) {
