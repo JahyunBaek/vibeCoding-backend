@@ -83,12 +83,50 @@ com.example.commonsystem/
 
 ### DTO 네이밍
 
-| 용도 | 네이밍 | 예시 |
-|------|--------|------|
-| 쓰기 입력 | `*Command` | `PostCreateCommand` |
-| 목록 조회 | `*ListRow` (record) | `UserListRow` |
-| 단건 조회 | `*Detail` (record) | `PostDetail` |
-| 요청 검증 | 컨트롤러 내부 record + `@Valid` | `CreatePostRequest` |
+| 용도 | 네이밍 | 권장 타입 | 예시 |
+|------|--------|----------|------|
+| 쓰기 입력 (Service→Mapper) | `*Command` | Lombok class | `PostCreateCommand` |
+| 목록 조회 (Mapper→Service) | `*ListRow` | **Lombok class** | `UserListRow` |
+| 단건 조회 (Mapper→Service) | `*Detail` | **Lombok class** | `PostDetail` |
+| 요청 검증 (Controller 입력) | 컨트롤러 내부 record + `@Valid` | record | `CreatePostRequest` |
+| API 응답 (단순 응답) | `*Response` | record 가능 | `LoginResponse` |
+
+### MyBatis 결과 DTO 작성 규칙 ⚠️
+
+**MyBatis 결과로 받는 DTO(`*ListRow`, `*Detail`)는 반드시 Lombok 클래스 사용:**
+
+```java
+@Getter
+@Setter
+@NoArgsConstructor
+public static class UserListRow {
+    private long userId;
+    private String username;
+    private boolean activeYn;
+    private Instant createdAt;
+}
+```
+
+**record를 사용하면 안 되는 이유:**
+- MyBatis 3.5+가 결과 컬럼을 wrapper type(`Long`, `Boolean`, `Integer`)으로 전달
+- record가 primitive(`long`, `boolean`, `int`)로 선언되어 있으면 `NoSuchMethodException` 발생
+- nested `<collection>` 매핑 시 setter 기반이라 record는 `IndexOutOfBoundsException` 발생
+
+**XML resultMap도 setter 기반(`<id>/<result>`) 사용**, `<constructor>` 매핑은 피한다.
+
+```xml
+<resultMap id="UserListRowMap" type="...UserListRow">
+  <id property="userId" column="user_id"/>
+  <result property="username" column="username"/>
+  <result property="activeYn" column="active_yn"/>
+  <result property="createdAt" column="created_at"/>
+</resultMap>
+```
+
+**record가 적합한 경우:**
+- Controller 입력용 Request DTO (Jackson 역직렬화)
+- 정적 응답 DTO (Service에서 `new XxxResponse(...)`로 직접 생성)
+- 외부 API 응답 매핑 (수동 변환)
 
 ### 컨트롤러 작성
 
