@@ -58,7 +58,7 @@ public class ApprovalDefinitionService {
     mapper.insert(tid, req, userId);
     // PostgreSQL RETURNING 을 통해 definition_id는 MyBatis가 자동 할당하지 않음 → 재조회
     DefinitionDetail d = mapper.findByCode(tid, req.approvalCode());
-    return d.definitionId();
+    return d.getDefinitionId();
   }
 
   @Transactional

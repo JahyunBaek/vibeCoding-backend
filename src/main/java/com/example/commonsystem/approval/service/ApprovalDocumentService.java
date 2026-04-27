@@ -52,7 +52,7 @@ public class ApprovalDocumentService {
   // --- 팝업 초기화 ---
   public PopupInitResponse popupInit(String approvalCode, UserPrincipal user) {
     DefinitionDetail def = definitionService.getByCode(approvalCode);
-    if (!def.activeYn()) {
+    if (!def.isActiveYn()) {
       throw new AppException(ErrorCode.VALIDATION, "비활성화된 결재 정책입니다.");
     }
     List<TemplateListRow> templates = templateService.myTemplates(user.getUserId(), approvalCode);
@@ -70,7 +70,7 @@ public class ApprovalDocumentService {
   public long request(RequestApprovalRequest req, UserPrincipal user) {
     long tid = tenantCtx.resolveTenantId(null);
     DefinitionDetail def = definitionService.getByCode(req.approvalCode());
-    if (!def.activeYn()) {
+    if (!def.isActiveYn()) {
       throw new AppException(ErrorCode.VALIDATION, "비활성화된 결재 정책입니다.");
     }
 
@@ -82,10 +82,10 @@ public class ApprovalDocumentService {
 
     // 주관부서 결정: 요청값 > 기본값 (주관부서 사용 기능만)
     Long supervisingDeptId = null;
-    if (def.useSupervisingDepartment()) {
+    if (def.isUseSupervisingDepartment()) {
       supervisingDeptId = req.supervisingDepartmentId() != null
           ? req.supervisingDepartmentId()
-          : def.defaultSupervisingDepartmentId();
+          : def.getDefaultSupervisingDepartmentId();
       if (supervisingDeptId == null) {
         throw new AppException(ErrorCode.VALIDATION, "주관부서가 지정되지 않았습니다.");
       }
