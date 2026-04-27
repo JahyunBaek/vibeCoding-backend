@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -68,7 +69,7 @@ public class ApprovalDocumentService {
   // --- 결재 요청 (상신) ---
   @Transactional
   public long request(RequestApprovalRequest req, UserPrincipal user) {
-    long tid = tenantCtx.resolveTenantId(null);
+    long tid = requireTenant();
     DefinitionDetail def = definitionService.getByCode(req.approvalCode());
     if (!def.isActiveYn()) {
       throw new AppException(ErrorCode.VALIDATION, "비활성화된 결재 정책입니다.");
@@ -125,6 +126,7 @@ public class ApprovalDocumentService {
         out.add(new StepRequest(
             r.stepOrder(), r.stepName(), r.approvalType(),
             r.targetDepartmentType(), r.targetDepartmentId(), r.targetRoleKey(),
+            r.targetUserId(),
             r.groupApprovalYn(), r.requiredYn()
         ));
       }
@@ -143,6 +145,7 @@ public class ApprovalDocumentService {
     }
     return new StepRequest(order, s.stepName(), s.approvalType(),
         type, deptId, s.targetRoleKey(),
+        s.targetUserId(),
         s.groupApprovalYn() != null ? s.groupApprovalYn() : Boolean.TRUE,
         s.requiredYn() != null ? s.requiredYn() : Boolean.TRUE);
   }
@@ -157,7 +160,7 @@ public class ApprovalDocumentService {
   // --- 승인 ---
   @Transactional
   public void approve(long documentId, long stepId, ActionRequest req, UserPrincipal user) {
-    long tid = tenantCtx.resolveTenantId(null);
+    long tid = requireTenant();
 
     if (mapper.countActableUsers(stepId, user.getUserId()) == 0) {
       throw new AppException(ErrorCode.FORBIDDEN, "이 단계를 처리할 권한이 없습니다.");
@@ -182,7 +185,7 @@ public class ApprovalDocumentService {
   // --- 반려 (MVP: 즉시 종료) ---
   @Transactional
   public void reject(long documentId, long stepId, ActionRequest req, UserPrincipal user) {
-    long tid = tenantCtx.resolveTenantId(null);
+    long tid = requireTenant();
     if (mapper.countActableUsers(stepId, user.getUserId()) == 0) {
       throw new AppException(ErrorCode.FORBIDDEN, "이 단계를 처리할 권한이 없습니다.");
     }
@@ -198,7 +201,7 @@ public class ApprovalDocumentService {
   // --- 회수 (요청자 본인, IN_PROGRESS 상태일 때) ---
   @Transactional
   public void withdraw(long documentId, UserPrincipal user) {
-    long tid = tenantCtx.resolveTenantId(null);
+    long tid = requireTenant();
     int n = mapper.cancelOrWithdraw(documentId, tid, "IN_PROGRESS", "WITHDRAWN", user.getUserId(), Instant.now());
     if (n == 0) {
       throw new AppException(ErrorCode.CONFLICT, "회수할 수 없는 상태입니다.");
@@ -208,7 +211,7 @@ public class ApprovalDocumentService {
 
   // --- 상세 ---
   public DocumentDetail detail(long documentId) {
-    long tid = tenantCtx.resolveTenantId(null);
+    long tid = requireTenant();
     DocumentDetail d = mapper.findDetail(documentId, tid);
     if (d == null) throw new AppException(ErrorCode.NOT_FOUND, "결재 문서를 찾을 수 없습니다.");
     return d;
@@ -216,7 +219,11 @@ public class ApprovalDocumentService {
 
   // --- 목록 ---
   public PageResponse<DocumentListRow> list(ListQuery q, UserPrincipal user) {
-    long tid = tenantCtx.resolveTenantId(null);
+    Long tid = tenantCtx.resolveTenantId(null);
+    if (tid == null) {
+      // SUPER_ADMIN은 개인 결재함 없음
+      return new PageResponse<>(Collections.emptyList(), Math.max(q.page(), 1), Math.min(Math.max(q.size(), 1), 100), 0);
+    }
     int p = Math.max(q.page(), 1);
     int s = Math.min(Math.max(q.size(), 1), 100);
     int offset = (p - 1) * s;
@@ -228,5 +235,15 @@ public class ApprovalDocumentService {
     List<DocumentListRow> items = mapper.findInbox(tid, user.getUserId(), inbox, q.approvalCode(), q.status(),
         q.keyword(), q.fromDate(), q.toDate(), s, offset);
     return new PageResponse<>(items, p, s, total);
+  }
+
+  /** 결재 문서는 사용자 개인 데이터이므로 tenantId 필수. SUPER_ADMIN은 사용 불가. */
+  private long requireTenant() {
+    Long tid = tenantCtx.resolveTenantId(null);
+    if (tid == null) {
+      throw new AppException(ErrorCode.VALIDATION,
+          "SUPER_ADMIN은 개인 결재함을 사용할 수 없습니다. 일반 사용자로 로그인하세요.");
+    }
+    return tid;
   }
 }

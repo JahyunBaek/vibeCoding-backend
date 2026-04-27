@@ -105,11 +105,15 @@ public class ApprovalLineTemplateService {
         throw new AppException(ErrorCode.VALIDATION, "step_order는 1 이상이어야 합니다.");
       }
       String type = s.targetDepartmentType();
-      if (!"REQUEST".equals(type) && !"SUPERVISING".equals(type) && !"CUSTOM".equals(type)) {
+      if (!"REQUEST".equals(type) && !"SUPERVISING".equals(type)
+          && !"CUSTOM".equals(type) && !"USER".equals(type)) {
         throw new AppException(ErrorCode.VALIDATION, "target_department_type 값이 올바르지 않습니다: " + type);
       }
       if ("CUSTOM".equals(type) && s.targetDepartmentId() == null) {
         throw new AppException(ErrorCode.VALIDATION, "CUSTOM 타입 단계는 target_department_id가 필요합니다.");
+      }
+      if ("USER".equals(type) && s.targetUserId() == null) {
+        throw new AppException(ErrorCode.VALIDATION, "USER 타입 단계는 target_user_id가 필요합니다.");
       }
     }
   }

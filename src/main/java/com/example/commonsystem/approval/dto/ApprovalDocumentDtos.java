@@ -68,6 +68,8 @@ public class ApprovalDocumentDtos {
       Long targetDepartmentId,
       String targetDepartmentName,
       String targetRoleKey,
+      Long targetUserId,
+      String targetUserName,
       boolean groupApprovalYn,
       String status,
       Long actedByUserId,

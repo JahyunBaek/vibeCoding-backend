@@ -27,11 +27,13 @@
     INSERT INTO approval_document_step (
       document_id, step_order, step_name, approval_type,
       target_department_type, target_department_id, target_role_key,
+      target_user_id,
       group_approval_yn, status
     ) VALUES (
       #{documentId}, #{s.stepOrder}, #{s.stepName},
       COALESCE(#{s.approvalType}, 'APPROVE'),
       #{s.targetDepartmentType}, #{s.targetDepartmentId}, #{s.targetRoleKey},
+      #{s.targetUserId},
       COALESCE(#{s.groupApprovalYn}, TRUE),
       'PENDING'
     )
@@ -47,6 +49,8 @@
       <arg column="target_department_id" javaType="java.lang.Long"/>
       <arg column="target_department_name" javaType="String"/>
       <arg column="target_role_key" javaType="String"/>
+      <arg column="target_user_id" javaType="java.lang.Long"/>
+      <arg column="target_user_name" javaType="String"/>
       <arg column="group_approval_yn" javaType="boolean"/>
       <arg column="status" javaType="String"/>
       <arg column="acted_by_user_id" javaType="java.lang.Long"/>
@@ -60,11 +64,13 @@
     SELECT s.step_id, s.step_order, s.step_name, s.approval_type,
            s.target_department_type, s.target_department_id,
            o.name AS target_department_name, s.target_role_key,
+           s.target_user_id, tu.name AS target_user_name,
            s.group_approval_yn, s.status, s.acted_by_user_id,
            u.name AS acted_by_name, s.acted_at, s.comment
       FROM approval_document_step s
       LEFT JOIN orgs o ON o.org_id = s.target_department_id
       LEFT JOIN users u ON u.user_id = s.acted_by_user_id
+      LEFT JOIN users tu ON tu.user_id = s.target_user_id
      WHERE s.document_id = #{documentId}
      ORDER BY s.step_order
   </select>
@@ -73,11 +79,13 @@
     SELECT s.step_id, s.step_order, s.step_name, s.approval_type,
            s.target_department_type, s.target_department_id,
            o.name AS target_department_name, s.target_role_key,
+           s.target_user_id, tu.name AS target_user_name,
            s.group_approval_yn, s.status, s.acted_by_user_id,
            u.name AS acted_by_name, s.acted_at, s.comment
       FROM approval_document_step s
       LEFT JOIN orgs o ON o.org_id = s.target_department_id
       LEFT JOIN users u ON u.user_id = s.acted_by_user_id
+      LEFT JOIN users tu ON tu.user_id = s.target_user_id
      WHERE s.document_id = #{documentId} AND s.status = 'PENDING'
      ORDER BY s.step_order
      LIMIT 1
@@ -223,8 +231,14 @@
            WHERE s.document_id = d.document_id
              AND s.status = 'PENDING'
              AND s.step_order = d.current_step_order
-             AND (s.target_department_id IS NULL OR s.target_department_id = u.org_id)
-             AND (s.target_role_key IS NULL OR s.target_role_key = u.role_key)
+             AND (
+               (s.target_department_type = 'USER' AND s.target_user_id = #{userId})
+               OR (
+                 s.target_department_type != 'USER'
+                 AND (s.target_department_id IS NULL OR s.target_department_id = u.org_id)
+                 AND (s.target_role_key IS NULL OR s.target_role_key = u.role_key)
+               )
+             )
         )
       </when>
       <when test="inbox == 'processed'">
@@ -280,15 +294,23 @@
      WHERE <include refid="inboxFilters"/>
   </select>
 
-  <!-- 단순 권한 체크: step의 대상 부서/역할에 해당 유저가 속하는지 -->
+  <!-- 권한 체크: step의 대상 부서/역할/사용자에 해당 유저가 매칭되는지
+       USER 타입: target_user_id가 정확히 일치해야 통과
+       그 외:    부서/역할 매칭 -->
   <select id="countActableUsers" resultType="int">
     SELECT COUNT(*)
       FROM approval_document_step s
       JOIN users u ON u.user_id = #{userId}
      WHERE s.step_id = #{stepId}
        AND s.status = 'PENDING'
-       AND (s.target_department_id IS NULL OR s.target_department_id = u.org_id)
-       AND (s.target_role_key IS NULL OR s.target_role_key = u.role_key)
+       AND (
+         (s.target_department_type = 'USER' AND s.target_user_id = #{userId})
+         OR (
+           s.target_department_type != 'USER'
+           AND (s.target_department_id IS NULL OR s.target_department_id = u.org_id)
+           AND (s.target_role_key IS NULL OR s.target_role_key = u.role_key)
+         )
+       )
   </select>
 
   <insert id="insertHistory">

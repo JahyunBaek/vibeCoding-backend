@@ -43,6 +43,8 @@ public class ApprovalLineTemplateDtos {
       Long targetDepartmentId,
       String targetDepartmentName,
       String targetRoleKey,
+      Long targetUserId,
+      String targetUserName,
       boolean groupApprovalYn,
       boolean requiredYn
   ) {}
@@ -52,9 +54,10 @@ public class ApprovalLineTemplateDtos {
       int stepOrder,
       @NotBlank @Size(max = 100) String stepName,
       String approvalType,         // APPROVE (기본)
-      @NotBlank String targetDepartmentType, // REQUEST | SUPERVISING | CUSTOM
+      @NotBlank String targetDepartmentType, // REQUEST | SUPERVISING | CUSTOM | USER
       Long targetDepartmentId,
       String targetRoleKey,
+      Long targetUserId,           // USER 타입일 때 필수
       Boolean groupApprovalYn,
       Boolean requiredYn
   ) {}
