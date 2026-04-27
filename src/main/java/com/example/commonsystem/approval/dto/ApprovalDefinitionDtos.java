@@ -13,24 +13,27 @@ import lombok.Setter;
 /** 결재 기능 코드 마스터 관련 DTO */
 public class ApprovalDefinitionDtos {
 
-  /** 목록 행 */
-  public record DefinitionListRow(
-      long definitionId,
-      long tenantId,
-      String approvalCode,
-      String approvalName,
-      String description,
-      boolean useRequestDepartment,
-      boolean useSupervisingDepartment,
-      Long defaultSupervisingDepartmentId,
-      String defaultSupervisingDepartmentName,
-      boolean useGroupApproval,
-      boolean usePersonalLineTemplate,
-      boolean activeYn,
-      int sortOrder,
-      Instant createdAt,
-      Instant updatedAt
-  ) {}
+  /** 목록 행 - MyBatis 매핑 호환을 위해 Lombok 클래스 사용 */
+  @Getter
+  @Setter
+  @NoArgsConstructor
+  public static class DefinitionListRow {
+    private long definitionId;
+    private long tenantId;
+    private String approvalCode;
+    private String approvalName;
+    private String description;
+    private boolean useRequestDepartment;
+    private boolean useSupervisingDepartment;
+    private Long defaultSupervisingDepartmentId;
+    private String defaultSupervisingDepartmentName;
+    private boolean useGroupApproval;
+    private boolean usePersonalLineTemplate;
+    private boolean activeYn;
+    private int sortOrder;
+    private Instant createdAt;
+    private Instant updatedAt;
+  }
 
   /** 상세 (+ 권한 규칙 목록) - MyBatis nested collection 매핑 위해 Lombok 클래스 사용 */
   @Getter
@@ -53,15 +56,19 @@ public class ApprovalDefinitionDtos {
     private List<AuthorityRuleRow> authorityRules;
   }
 
-  public record AuthorityRuleRow(
-      Long ruleId,
-      String approvalCode,
-      Long targetDepartmentId,
-      String targetDepartmentName,
-      String targetRoleKey,
-      String stepType,
-      boolean activeYn
-  ) {}
+  /** 권한 규칙 행 - MyBatis 매핑 호환을 위해 Lombok 클래스 사용 */
+  @Getter
+  @Setter
+  @NoArgsConstructor
+  public static class AuthorityRuleRow {
+    private Long ruleId;
+    private String approvalCode;
+    private Long targetDepartmentId;
+    private String targetDepartmentName;
+    private String targetRoleKey;
+    private String stepType;
+    private boolean activeYn;
+  }
 
   /** 생성 요청 */
   public record CreateRequest(

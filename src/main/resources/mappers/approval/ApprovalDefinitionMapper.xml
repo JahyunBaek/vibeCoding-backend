@@ -4,23 +4,21 @@
 <mapper namespace="com.example.commonsystem.approval.mapper.ApprovalDefinitionMapper">
 
   <resultMap id="DefinitionListRowMap" type="com.example.commonsystem.approval.dto.ApprovalDefinitionDtos$DefinitionListRow">
-    <constructor>
-      <idArg column="definition_id" javaType="long"/>
-      <arg column="tenant_id" javaType="long"/>
-      <arg column="approval_code" javaType="String"/>
-      <arg column="approval_name" javaType="String"/>
-      <arg column="description" javaType="String"/>
-      <arg column="use_request_department" javaType="boolean"/>
-      <arg column="use_supervising_department" javaType="boolean"/>
-      <arg column="default_supervising_department_id" javaType="java.lang.Long"/>
-      <arg column="default_supervising_department_name" javaType="String"/>
-      <arg column="use_group_approval" javaType="boolean"/>
-      <arg column="use_personal_line_template" javaType="boolean"/>
-      <arg column="active_yn" javaType="boolean"/>
-      <arg column="sort_order" javaType="int"/>
-      <arg column="created_at" javaType="java.time.Instant"/>
-      <arg column="updated_at" javaType="java.time.Instant"/>
-    </constructor>
+    <id property="definitionId" column="definition_id"/>
+    <result property="tenantId" column="tenant_id"/>
+    <result property="approvalCode" column="approval_code"/>
+    <result property="approvalName" column="approval_name"/>
+    <result property="description" column="description"/>
+    <result property="useRequestDepartment" column="use_request_department"/>
+    <result property="useSupervisingDepartment" column="use_supervising_department"/>
+    <result property="defaultSupervisingDepartmentId" column="default_supervising_department_id"/>
+    <result property="defaultSupervisingDepartmentName" column="default_supervising_department_name"/>
+    <result property="useGroupApproval" column="use_group_approval"/>
+    <result property="usePersonalLineTemplate" column="use_personal_line_template"/>
+    <result property="activeYn" column="active_yn"/>
+    <result property="sortOrder" column="sort_order"/>
+    <result property="createdAt" column="created_at"/>
+    <result property="updatedAt" column="updated_at"/>
   </resultMap>
 
   <select id="findAll" resultMap="DefinitionListRowMap">
@@ -56,15 +54,13 @@
   </select>
 
   <resultMap id="AuthorityRuleMap" type="com.example.commonsystem.approval.dto.ApprovalDefinitionDtos$AuthorityRuleRow">
-    <constructor>
-      <idArg column="rule_id" javaType="java.lang.Long"/>
-      <arg column="approval_code" javaType="String"/>
-      <arg column="target_department_id" javaType="java.lang.Long"/>
-      <arg column="target_department_name" javaType="String"/>
-      <arg column="target_role_key" javaType="String"/>
-      <arg column="step_type" javaType="String"/>
-      <arg column="active_yn" javaType="boolean"/>
-    </constructor>
+    <id property="ruleId" column="rule_id"/>
+    <result property="approvalCode" column="approval_code"/>
+    <result property="targetDepartmentId" column="target_department_id"/>
+    <result property="targetDepartmentName" column="target_department_name"/>
+    <result property="targetRoleKey" column="target_role_key"/>
+    <result property="stepType" column="step_type"/>
+    <result property="activeYn" column="active_yn"/>
   </resultMap>
 
   <resultMap id="DefinitionDetailMap" type="com.example.commonsystem.approval.dto.ApprovalDefinitionDtos$DefinitionDetail">
