@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Param;
 
 import com.example.commonsystem.user.domain.User;
 import com.example.commonsystem.user.dto.UserCreateCommand;
+import com.example.commonsystem.user.dto.UserDirectoryRow;
 import com.example.commonsystem.user.dto.UserListRow;
 import com.example.commonsystem.user.dto.UserUpdateCommand;
 
@@ -18,6 +19,12 @@ public interface UserMapper {
   long count(@Param("tenantId") Long tenantId, @Param("orgId") Long orgId);
   List<UserListRow> findPage(@Param("tenantId") Long tenantId, @Param("orgId") Long orgId,
       @Param("limit") int limit, @Param("offset") int offset);
+
+  /** 디렉토리 검색 (이름/아이디 LIKE) */
+  long searchCount(@Param("tenantId") Long tenantId, @Param("orgId") Long orgId,
+      @Param("keyword") String keyword);
+  List<UserDirectoryRow> searchPage(@Param("tenantId") Long tenantId, @Param("orgId") Long orgId,
+      @Param("keyword") String keyword, @Param("limit") int limit, @Param("offset") int offset);
 
   void insert(UserCreateCommand cmd);
   void update(UserUpdateCommand cmd);
