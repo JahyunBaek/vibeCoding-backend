@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.example.commonsystem.approval.dto.ApprovalDefinitionDtos.CreateAuthorityRuleRequest;
 import com.example.commonsystem.approval.dto.ApprovalDefinitionDtos.CreateRequest;
+import com.example.commonsystem.approval.dto.ApprovalDefinitionDtos.CreateRequiredStepRequest;
 import com.example.commonsystem.approval.dto.ApprovalDefinitionDtos.DefinitionDetail;
 import com.example.commonsystem.approval.dto.ApprovalDefinitionDtos.DefinitionListRow;
 import com.example.commonsystem.approval.dto.ApprovalDefinitionDtos.UpdateRequest;
@@ -100,6 +101,29 @@ public class AdminApprovalDefinitionController {
       @PathVariable long ruleId,
       @RequestParam(required = false) Long tenantId) {
     service.deleteAuthorityRule(ruleId, tenantId);
+    return ApiResponse.ok();
+  }
+
+  @Operation(summary = "필수 결재 단계 추가",
+      description = "사용자 결재선 뒤에 자동으로 강제 추가되는 단계")
+  @RequiresAction(screen = "ADMIN_APPROVAL_DEF", action = "MANAGE")
+  @PostMapping("/{definitionId}/required-steps")
+  public ApiResponse<Void> addRequiredStep(
+      @PathVariable long definitionId,
+      @Valid @RequestBody CreateRequiredStepRequest req,
+      @RequestParam(required = false) Long tenantId) {
+    service.addRequiredStep(definitionId, req, tenantId);
+    return ApiResponse.ok();
+  }
+
+  @Operation(summary = "필수 결재 단계 삭제")
+  @RequiresAction(screen = "ADMIN_APPROVAL_DEF", action = "MANAGE")
+  @DeleteMapping("/{definitionId}/required-steps/{requiredStepId}")
+  public ApiResponse<Void> deleteRequiredStep(
+      @PathVariable long definitionId,
+      @PathVariable long requiredStepId,
+      @RequestParam(required = false) Long tenantId) {
+    service.deleteRequiredStep(definitionId, requiredStepId, tenantId);
     return ApiResponse.ok();
   }
 }

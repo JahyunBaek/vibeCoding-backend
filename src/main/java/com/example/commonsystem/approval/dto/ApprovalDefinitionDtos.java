@@ -54,6 +54,27 @@ public class ApprovalDefinitionDtos {
     private int sortOrder;
     private String remark;
     private List<AuthorityRuleRow> authorityRules;
+    /** 정책 필수 단계 — 사용자 결재선 뒤에 강제로 붙음 */
+    private List<RequiredStepRow> requiredSteps;
+  }
+
+  /** 필수 단계 행 (조회용) */
+  @Getter
+  @Setter
+  @NoArgsConstructor
+  public static class RequiredStepRow {
+    private Long requiredStepId;
+    private long definitionId;
+    private int stepOrder;
+    private String stepName;
+    private String approvalType;
+    private String targetDepartmentType;
+    private Long targetDepartmentId;
+    private String targetDepartmentName;
+    private String targetRoleKey;
+    private Long targetUserId;
+    private String targetUserName;
+    private boolean groupApprovalYn;
   }
 
   /** 권한 규칙 행 - MyBatis 매핑 호환을 위해 Lombok 클래스 사용 */
@@ -104,5 +125,17 @@ public class ApprovalDefinitionDtos {
       Long targetDepartmentId,
       String targetRoleKey,
       @NotBlank String stepType
+  ) {}
+
+  /** 필수 단계 추가 요청 */
+  public record CreateRequiredStepRequest(
+      Integer stepOrder,                       // null이면 마지막에 추가
+      @NotBlank @Size(max = 100) String stepName,
+      String approvalType,                     // APPROVE 기본
+      @NotBlank String targetDepartmentType,   // REQUEST | SUPERVISING | CUSTOM | USER
+      Long targetDepartmentId,
+      String targetRoleKey,
+      Long targetUserId,
+      Boolean groupApprovalYn
   ) {}
 }

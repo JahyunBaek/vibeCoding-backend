@@ -124,6 +124,8 @@ public class ApprovalDocumentDtos {
       ApprovalDefinitionDtos.DefinitionDetail definition,
       ApprovalLineTemplateDtos.TemplateDetail defaultTemplate,
       List<ApprovalLineTemplateDtos.TemplateListRow> templates,
-      @NotEmpty List<ApprovalLineTemplateDtos.StepRow> previewSteps
+      List<ApprovalLineTemplateDtos.StepRow> previewSteps,
+      /** 정책에 등록된 필수 단계 — 사용자 단계 뒤에 자동 추가됨 */
+      List<ApprovalDefinitionDtos.RequiredStepRow> requiredSteps
   ) {}
 }

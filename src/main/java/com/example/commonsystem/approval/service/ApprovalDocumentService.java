@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.commonsystem.approval.dto.ApprovalDefinitionDtos.DefinitionDetail;
+import com.example.commonsystem.approval.dto.ApprovalDefinitionDtos.RequiredStepRow;
 import com.example.commonsystem.approval.dto.ApprovalDocumentDtos.ActionRequest;
 import com.example.commonsystem.approval.dto.ApprovalDocumentDtos.DocumentDetail;
 import com.example.commonsystem.approval.dto.ApprovalDocumentDtos.DocumentListRow;
@@ -63,7 +64,12 @@ public class ApprovalDocumentService {
     if (defaultTpl != null && defaultTpl.steps() != null) {
       previewSteps.addAll(defaultTpl.steps());
     }
-    return new PopupInitResponse(def, defaultTpl, templates, previewSteps);
+
+    List<RequiredStepRow> requiredSteps = def.getRequiredSteps() != null
+        ? def.getRequiredSteps()
+        : List.of();
+
+    return new PopupInitResponse(def, defaultTpl, templates, previewSteps, requiredSteps);
   }
 
   // --- 결재 요청 (상신) ---
@@ -75,8 +81,16 @@ public class ApprovalDocumentService {
       throw new AppException(ErrorCode.VALIDATION, "비활성화된 결재 정책입니다.");
     }
 
-    // 단계 구성 결정: templateId 우선, 없으면 req.steps
-    List<StepRequest> finalSteps = resolveSteps(req, user);
+    // 사용자 단계 (양식 또는 직접 구성)
+    List<StepRequest> userSteps = resolveSteps(req, user);
+
+    // 정책 필수 단계 — 사용자 단계 뒤에 강제로 합쳐짐
+    List<StepRequest> requiredSteps = toStepRequests(def.getRequiredSteps());
+
+    List<StepRequest> finalSteps = new ArrayList<>(userSteps.size() + requiredSteps.size());
+    finalSteps.addAll(userSteps);
+    finalSteps.addAll(requiredSteps);
+
     if (finalSteps.isEmpty()) {
       throw new AppException(ErrorCode.VALIDATION, "결재 단계가 비어있습니다.");
     }
@@ -135,9 +149,25 @@ public class ApprovalDocumentService {
     return req.steps() != null ? req.steps() : List.of();
   }
 
+  /** 정책 RequiredStepRow → StepRequest 변환 */
+  private List<StepRequest> toStepRequests(List<RequiredStepRow> rows) {
+    if (rows == null || rows.isEmpty()) return List.of();
+    List<StepRequest> out = new ArrayList<>(rows.size());
+    for (RequiredStepRow r : rows) {
+      out.add(new StepRequest(
+          r.getStepOrder(), r.getStepName(), r.getApprovalType(),
+          r.getTargetDepartmentType(), r.getTargetDepartmentId(), r.getTargetRoleKey(),
+          r.getTargetUserId(),
+          r.isGroupApprovalYn(), Boolean.TRUE
+      ));
+    }
+    return out;
+  }
+
   private StepRequest materializeStep(StepRequest s, Long requesterDeptId, Long supervisingDeptId, int order) {
     Long deptId = s.targetDepartmentId();
     String type = s.targetDepartmentType();
+    // REQUEST/SUPERVISING은 동적으로 부서 ID 치환, CUSTOM/USER는 입력값 그대로 사용
     if ("REQUEST".equals(type)) {
       deptId = requesterDeptId;
     } else if ("SUPERVISING".equals(type)) {

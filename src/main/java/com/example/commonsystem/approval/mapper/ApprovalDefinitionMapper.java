@@ -8,8 +8,10 @@ import org.apache.ibatis.annotations.Param;
 import com.example.commonsystem.approval.dto.ApprovalDefinitionDtos.AuthorityRuleRow;
 import com.example.commonsystem.approval.dto.ApprovalDefinitionDtos.CreateAuthorityRuleRequest;
 import com.example.commonsystem.approval.dto.ApprovalDefinitionDtos.CreateRequest;
+import com.example.commonsystem.approval.dto.ApprovalDefinitionDtos.CreateRequiredStepRequest;
 import com.example.commonsystem.approval.dto.ApprovalDefinitionDtos.DefinitionDetail;
 import com.example.commonsystem.approval.dto.ApprovalDefinitionDtos.DefinitionListRow;
+import com.example.commonsystem.approval.dto.ApprovalDefinitionDtos.RequiredStepRow;
 import com.example.commonsystem.approval.dto.ApprovalDefinitionDtos.UpdateRequest;
 
 @Mapper
@@ -50,4 +52,24 @@ public interface ApprovalDefinitionMapper {
 
   int deleteAuthorityRule(@Param("ruleId") long ruleId,
                            @Param("tenantId") long tenantId);
+
+  // Required steps (정책 필수 결재 단계)
+  List<RequiredStepRow> findRequiredSteps(@Param("definitionId") long definitionId);
+
+  /** approval_code 로 조회 (테넌트 격리 — definition 조인) */
+  List<RequiredStepRow> findRequiredStepsByCode(@Param("tenantId") long tenantId,
+                                                  @Param("approvalCode") String approvalCode);
+
+  Integer findMaxRequiredStepOrder(@Param("definitionId") long definitionId);
+
+  void insertRequiredStep(@Param("definitionId") long definitionId,
+                           @Param("stepOrder") int stepOrder,
+                           @Param("req") CreateRequiredStepRequest req);
+
+  int deleteRequiredStep(@Param("requiredStepId") long requiredStepId,
+                          @Param("definitionId") long definitionId);
+
+  /** definition_id 가 해당 tenant 소속인지 확인 */
+  int countDefinitionByIdAndTenant(@Param("definitionId") long definitionId,
+                                     @Param("tenantId") long tenantId);
 }
