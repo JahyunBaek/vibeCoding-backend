@@ -189,6 +189,38 @@ public class XxxController {
 - `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` 사용 (Postgres 9.6+)
 - **이미 적용된 마이그레이션은 절대 수정 금지** — 항상 새 버전 추가
 
+#### ⚠️ 다른 브랜치로 머지할 때 (특히 dev로 머지 시)
+
+양쪽 브랜치 모두에서 새 마이그레이션이 추가된 경우 거의 항상 충돌이 발생한다.
+**머지 직전에 반드시 다음 절차 수행**:
+
+```bash
+# 1. 양쪽 브랜치의 마이그레이션 번호 비교
+git checkout dev
+ls src/main/resources/db/migration/ | sort -V | tail -5
+
+git checkout common/saas-base   # 또는 머지 source 브랜치
+ls src/main/resources/db/migration/ | sort -V | tail -5
+
+# 2. 같은 V번호가 양쪽에 다른 내용으로 존재하면, source 브랜치에서 dev의 max+1 이후로 rename
+git mv V19__approval_required_steps.sql V25__approval_required_steps.sql
+git commit -m "[FIX] dev 머지 위해 V번호 조정"
+
+# 3. 머지
+git checkout dev
+git merge --no-ff common/saas-base
+
+# 4. 검증
+bash scripts/check-migration.sh
+./gradlew compileJava
+```
+
+**중요한 함정**:
+- 같은 V번호 + 같은 파일명 → git merge 충돌 (둘 중 하나만 살림 = 마이그레이션 손실 위험)
+- 같은 V번호 + 다른 파일명 → git은 둘 다 가져옴 → **Flyway가 "Duplicate version" 에러로 기동 실패**
+- dev에 V20이 이미 적용된 운영 DB에 머지로 V19가 끼어듦 → `outOfOrder=false`(기본값)면 기동 실패. 임시로 `out-of-order: true` 설정하거나 V19를 V21로 rename 후 적용 권장
+- **운영 DB에 적용된 마이그레이션 파일은 rename 금지** — 체크섬 깨짐. 새 번호 추가만 가능
+
 ### Redis 키 규칙
 
 | 키 패턴 | 용도 |
@@ -217,3 +249,35 @@ public class XxxController {
 - 큰 단위의 신규 기능 개발 시 `feature/xxxx` 브랜치(원격 포함)를 생성하여 개발 및 테스트한다.
 - 문제없으면 `dev` 브랜치에 merge 한다.
 - `main` 브랜치로의 merge는 **사용자가 직접** 진행한다. (Claude가 main에 merge하지 않는다.)
+
+### 🔍 main/dev가 아닌 브랜치 작업 시 검증 절차 (필수)
+
+`feature/xxx`, `common/xxx`, `hotfix/xxx` 등에서 작업할 때는 다음을 반드시 확인하라.
+
+**작업 시작 전**:
+```bash
+git fetch origin
+git branch --show-current                       # 현재 브랜치 확인
+git log HEAD..origin/dev --oneline              # dev가 내 브랜치보다 앞선 커밋
+git log origin/dev..HEAD --oneline              # 내 브랜치가 dev보다 앞선 커밋
+```
+- dev가 앞서 있으면 머지/리베이스로 동기화 후 작업
+- 너무 오래 격리되면 머지 비용이 폭증한다 — 가급적 자주 dev를 끌어와라
+
+**작업 중간**:
+- 마이그레이션 추가했다면: `bash scripts/check-migration.sh`
+- 다른 사람이 dev에 마이그레이션 추가했을 가능성 → `git fetch origin && git log HEAD..origin/dev -- src/main/resources/db/migration/`
+
+**머지 직전**:
+```bash
+git fetch origin
+ls src/main/resources/db/migration/ | sort -V | tail -5            # 내 브랜치 V번호
+git ls-tree -r origin/dev --name-only | grep db/migration | sort -V | tail -5   # dev V번호
+# 겹치거나 순서가 어긋나면 git mv로 rename 후 재커밋
+bash scripts/check-migration.sh
+./gradlew compileJava
+```
+
+dev가 아닌 다른 환경(예: 운영 DB가 적용된 dev)으로 머지가 예상되는 경우, 아래 사항을 추가로 검토:
+- 머지 대상 DB의 적용된 마지막 V번호
+- 그보다 작은 V번호로 끼어들면 안 됨
