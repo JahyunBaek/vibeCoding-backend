@@ -63,6 +63,42 @@
      LIMIT #{limit} OFFSET #{offset}
   </select>
 
+  <sql id="searchFilter">
+    <if test="tenantId != null">
+       AND u.tenant_id = #{tenantId}
+    </if>
+    <if test="orgId != null">
+       AND u.org_id = #{orgId}
+    </if>
+    <if test="keyword != null and keyword != ''">
+       AND (u.name ILIKE '%' || #{keyword} || '%'
+         OR u.username ILIKE '%' || #{keyword} || '%')
+    </if>
+       AND u.enabled = TRUE
+  </sql>
+
+  <select id="searchCount" resultType="long">
+    SELECT COUNT(*)
+      FROM users u
+     WHERE 1=1
+    <include refid="searchFilter"/>
+  </select>
+
+  <select id="searchPage" resultType="com.example.commonsystem.user.dto.UserDirectoryRow">
+    SELECT u.user_id  AS userId,
+           u.username,
+           u.name,
+           u.role_key  AS roleKey,
+           u.org_id    AS orgId,
+           o.name      AS orgName
+      FROM users u
+      LEFT JOIN orgs o ON o.org_id = u.org_id
+     WHERE 1=1
+    <include refid="searchFilter"/>
+     ORDER BY u.name ASC, u.user_id ASC
+     LIMIT #{limit} OFFSET #{offset}
+  </select>
+
   <insert id="insert" parameterType="com.example.commonsystem.user.dto.UserCreateCommand">
     INSERT INTO users(username, password_hash, name, role_key, org_id, tenant_id, enabled)
     VALUES(#{username}, #{passwordHash}, #{name}, #{roleKey}, #{orgId}, #{tenantId}, #{enabled})

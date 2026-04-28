@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.commonsystem.approval.mapper.ApprovalDefinitionMapper">
+
+  <resultMap id="DefinitionListRowMap" type="com.example.commonsystem.approval.dto.ApprovalDefinitionDtos$DefinitionListRow">
+    <id property="definitionId" column="definition_id"/>
+    <result property="tenantId" column="tenant_id"/>
+    <result property="approvalCode" column="approval_code"/>
+    <result property="approvalName" column="approval_name"/>
+    <result property="description" column="description"/>
+    <result property="useRequestDepartment" column="use_request_department"/>
+    <result property="useSupervisingDepartment" column="use_supervising_department"/>
+    <result property="defaultSupervisingDepartmentId" column="default_supervising_department_id"/>
+    <result property="defaultSupervisingDepartmentName" column="default_supervising_department_name"/>
+    <result property="useGroupApproval" column="use_group_approval"/>
+    <result property="usePersonalLineTemplate" column="use_personal_line_template"/>
+    <result property="activeYn" column="active_yn"/>
+    <result property="sortOrder" column="sort_order"/>
+    <result property="createdAt" column="created_at"/>
+    <result property="updatedAt" column="updated_at"/>
+  </resultMap>
+
+  <select id="findAll" resultMap="DefinitionListRowMap">
+    SELECT d.definition_id,
+           d.tenant_id,
+           d.approval_code,
+           d.approval_name,
+           d.description,
+           d.use_request_department,
+           d.use_supervising_department,
+           d.default_supervising_department_id,
+           o.name AS default_supervising_department_name,
+           d.use_group_approval,
+           d.use_personal_line_template,
+           d.active_yn,
+           d.sort_order,
+           d.created_at,
+           d.updated_at
+      FROM approval_definition d
+      LEFT JOIN orgs o ON o.org_id = d.default_supervising_department_id
+     WHERE 1=1
+    <if test="tenantId != null">
+       AND d.tenant_id = #{tenantId}
+    </if>
+    <if test="activeOnly">
+       AND d.active_yn = TRUE
+    </if>
+    <if test="keyword != null and keyword != ''">
+       AND (d.approval_code ILIKE '%' || #{keyword} || '%'
+         OR d.approval_name ILIKE '%' || #{keyword} || '%')
+    </if>
+     ORDER BY d.sort_order, d.definition_id
+  </select>
+
+  <resultMap id="AuthorityRuleMap" type="com.example.commonsystem.approval.dto.ApprovalDefinitionDtos$AuthorityRuleRow">
+    <id property="ruleId" column="rule_id"/>
+    <result property="approvalCode" column="approval_code"/>
+    <result property="targetDepartmentId" column="target_department_id"/>
+    <result property="targetDepartmentName" column="target_department_name"/>
+    <result property="targetRoleKey" column="target_role_key"/>
+    <result property="stepType" column="step_type"/>
+    <result property="activeYn" column="active_yn"/>
+  </resultMap>
+
+  <resultMap id="DefinitionDetailMap" type="com.example.commonsystem.approval.dto.ApprovalDefinitionDtos$DefinitionDetail">
+    <id property="definitionId" column="definition_id"/>
+    <result property="tenantId" column="tenant_id"/>
+    <result property="approvalCode" column="approval_code"/>
+    <result property="approvalName" column="approval_name"/>
+    <result property="description" column="description"/>
+    <result property="useRequestDepartment" column="use_request_department"/>
+    <result property="useSupervisingDepartment" column="use_supervising_department"/>
+    <result property="defaultSupervisingDepartmentId" column="default_supervising_department_id"/>
+    <result property="useGroupApproval" column="use_group_approval"/>
+    <result property="usePersonalLineTemplate" column="use_personal_line_template"/>
+    <result property="activeYn" column="active_yn"/>
+    <result property="sortOrder" column="sort_order"/>
+    <result property="remark" column="remark"/>
+    <collection property="authorityRules"
+                ofType="com.example.commonsystem.approval.dto.ApprovalDefinitionDtos$AuthorityRuleRow"
+                column="{tenantId=tenant_id,approvalCode=approval_code}"
+                select="findAuthorityRules"/>
+    <collection property="requiredSteps"
+                ofType="com.example.commonsystem.approval.dto.ApprovalDefinitionDtos$RequiredStepRow"
+                column="definition_id"
+                select="findRequiredSteps"/>
+  </resultMap>
+
+  <resultMap id="RequiredStepRowMap" type="com.example.commonsystem.approval.dto.ApprovalDefinitionDtos$RequiredStepRow">
+    <id property="requiredStepId" column="required_step_id"/>
+    <result property="definitionId" column="definition_id"/>
+    <result property="stepOrder" column="step_order"/>
+    <result property="stepName" column="step_name"/>
+    <result property="approvalType" column="approval_type"/>
+    <result property="targetDepartmentType" column="target_department_type"/>
+    <result property="targetDepartmentId" column="target_department_id"/>
+    <result property="targetDepartmentName" column="target_department_name"/>
+    <result property="targetRoleKey" column="target_role_key"/>
+    <result property="targetUserId" column="target_user_id"/>
+    <result property="targetUserName" column="target_user_name"/>
+    <result property="groupApprovalYn" column="group_approval_yn"/>
+  </resultMap>
+
+  <select id="findByCode" resultMap="DefinitionDetailMap">
+    SELECT d.definition_id, d.tenant_id, d.approval_code, d.approval_name, d.description,
+           d.use_request_department, d.use_supervising_department,
+           d.default_supervising_department_id,
+           d.use_group_approval, d.use_personal_line_template,
+           d.active_yn, d.sort_order, d.remark
+      FROM approval_definition d
+     WHERE d.approval_code = #{approvalCode}
+    <if test="tenantId != null">
+       AND d.tenant_id = #{tenantId}
+    </if>
+     LIMIT 1
+  </select>
+
+  <select id="findById" resultMap="DefinitionDetailMap">
+    SELECT d.definition_id, d.tenant_id, d.approval_code, d.approval_name, d.description,
+           d.use_request_department, d.use_supervising_department,
+           d.default_supervising_department_id,
+           d.use_group_approval, d.use_personal_line_template,
+           d.active_yn, d.sort_order, d.remark
+      FROM approval_definition d
+     WHERE d.definition_id = #{definitionId}
+    <if test="tenantId != null">
+       AND d.tenant_id = #{tenantId}
+    </if>
+     LIMIT 1
+  </select>
+
+  <select id="existsByCode" resultType="int">
+    SELECT COUNT(*) FROM approval_definition
+     WHERE tenant_id = #{tenantId} AND approval_code = #{approvalCode}
+  </select>
+
+  <insert id="insert">
+    INSERT INTO approval_definition (
+      tenant_id, approval_code, approval_name, description,
+      use_request_department, use_supervising_department,
+      default_supervising_department_id,
+      use_group_approval, use_personal_line_template,
+      active_yn, sort_order, remark, created_by, updated_by
+    ) VALUES (
+      #{tenantId}, #{req.approvalCode}, #{req.approvalName}, #{req.description},
+      #{req.useRequestDepartment}, #{req.useSupervisingDepartment},
+      #{req.defaultSupervisingDepartmentId},
+      #{req.useGroupApproval}, #{req.usePersonalLineTemplate},
+      #{req.activeYn},
+      <choose>
+        <when test="req.sortOrder != null">#{req.sortOrder}</when>
+        <otherwise>0</otherwise>
+      </choose>,
+      #{req.remark}, #{userId}, #{userId}
+    )
+  </insert>
+
+  <update id="update">
+    UPDATE approval_definition
+       SET approval_name = #{req.approvalName},
+           description = #{req.description},
+           use_request_department = #{req.useRequestDepartment},
+           use_supervising_department = #{req.useSupervisingDepartment},
+           default_supervising_department_id = #{req.defaultSupervisingDepartmentId},
+           use_group_approval = #{req.useGroupApproval},
+           use_personal_line_template = #{req.usePersonalLineTemplate},
+           active_yn = #{req.activeYn},
+           sort_order = <choose><when test="req.sortOrder != null">#{req.sortOrder}</when><otherwise>sort_order</otherwise></choose>,
+           remark = #{req.remark},
+           updated_by = #{userId},
+           updated_at = NOW()
+     WHERE definition_id = #{definitionId} AND tenant_id = #{tenantId}
+  </update>
+
+  <delete id="deleteById">
+    DELETE FROM approval_definition
+     WHERE definition_id = #{definitionId} AND tenant_id = #{tenantId}
+  </delete>
+
+  <!-- Authority Rules -->
+  <select id="findAuthorityRules" resultMap="AuthorityRuleMap">
+    SELECT r.rule_id, r.approval_code,
+           r.target_department_id, o.name AS target_department_name,
+           r.target_role_key, r.step_type, r.active_yn
+      FROM approval_authority_rule r
+      LEFT JOIN orgs o ON o.org_id = r.target_department_id
+     WHERE r.tenant_id = #{tenantId} AND r.approval_code = #{approvalCode}
+     ORDER BY r.rule_id
+  </select>
+
+  <insert id="insertAuthorityRule">
+    INSERT INTO approval_authority_rule (
+      tenant_id, approval_code, target_department_id, target_role_key, step_type
+    ) VALUES (
+      #{tenantId}, #{approvalCode}, #{req.targetDepartmentId}, #{req.targetRoleKey}, #{req.stepType}
+    )
+  </insert>
+
+  <delete id="deleteAuthorityRule">
+    DELETE FROM approval_authority_rule
+     WHERE rule_id = #{ruleId} AND tenant_id = #{tenantId}
+  </delete>
+
+  <!-- Required Steps -->
+  <select id="findRequiredSteps" resultMap="RequiredStepRowMap">
+    SELECT s.required_step_id, s.definition_id, s.step_order, s.step_name, s.approval_type,
+           s.target_department_type, s.target_department_id,
+           o.name AS target_department_name,
+           s.target_role_key,
+           s.target_user_id,
+           u.name AS target_user_name,
+           s.group_approval_yn
+      FROM approval_definition_required_step s
+      LEFT JOIN orgs o ON o.org_id = s.target_department_id
+      LEFT JOIN users u ON u.user_id = s.target_user_id
+     WHERE s.definition_id = #{definitionId}
+     ORDER BY s.step_order, s.required_step_id
+  </select>
+
+  <select id="findRequiredStepsByCode" resultMap="RequiredStepRowMap">
+    SELECT s.required_step_id, s.definition_id, s.step_order, s.step_name, s.approval_type,
+           s.target_department_type, s.target_department_id,
+           o.name AS target_department_name,
+           s.target_role_key,
+           s.target_user_id,
+           u.name AS target_user_name,
+           s.group_approval_yn
+      FROM approval_definition_required_step s
+      JOIN approval_definition d ON d.definition_id = s.definition_id
+      LEFT JOIN orgs o ON o.org_id = s.target_department_id
+      LEFT JOIN users u ON u.user_id = s.target_user_id
+     WHERE d.tenant_id = #{tenantId} AND d.approval_code = #{approvalCode}
+     ORDER BY s.step_order, s.required_step_id
+  </select>
+
+  <select id="findMaxRequiredStepOrder" resultType="java.lang.Integer">
+    SELECT COALESCE(MAX(step_order), 0)
+      FROM approval_definition_required_step
+     WHERE definition_id = #{definitionId}
+  </select>
+
+  <insert id="insertRequiredStep">
+    INSERT INTO approval_definition_required_step (
+      definition_id, step_order, step_name, approval_type,
+      target_department_type, target_department_id, target_role_key, target_user_id,
+      group_approval_yn
+    ) VALUES (
+      #{definitionId}, #{stepOrder}, #{req.stepName},
+      COALESCE(#{req.approvalType}, 'APPROVE'),
+      #{req.targetDepartmentType}, #{req.targetDepartmentId}, #{req.targetRoleKey}, #{req.targetUserId},
+      COALESCE(#{req.groupApprovalYn}, TRUE)
+    )
+  </insert>
+
+  <delete id="deleteRequiredStep">
+    DELETE FROM approval_definition_required_step
+     WHERE required_step_id = #{requiredStepId} AND definition_id = #{definitionId}
+  </delete>
+
+  <select id="countDefinitionByIdAndTenant" resultType="int">
+    SELECT COUNT(*) FROM approval_definition
+     WHERE definition_id = #{definitionId} AND tenant_id = #{tenantId}
+  </select>
+
+</mapper>

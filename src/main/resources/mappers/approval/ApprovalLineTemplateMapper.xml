@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.commonsystem.approval.mapper.ApprovalLineTemplateMapper">
+
+  <resultMap id="TemplateListRowMap" type="com.example.commonsystem.approval.dto.ApprovalLineTemplateDtos$TemplateListRow">
+    <constructor>
+      <idArg column="template_id" javaType="long"/>
+      <arg column="approval_code" javaType="String"/>
+      <arg column="template_name" javaType="String"/>
+      <arg column="default_yn" javaType="boolean"/>
+      <arg column="active_yn" javaType="boolean"/>
+      <arg column="step_count" javaType="int"/>
+      <arg column="updated_at" javaType="java.time.Instant"/>
+    </constructor>
+  </resultMap>
+
+  <select id="findMyTemplates" resultMap="TemplateListRowMap">
+    SELECT t.template_id, t.approval_code, t.template_name, t.default_yn, t.active_yn,
+           COALESCE((SELECT COUNT(*) FROM approval_line_template_step s WHERE s.template_id = t.template_id), 0)::int AS step_count,
+           t.updated_at
+      FROM approval_line_template t
+     WHERE t.tenant_id = #{tenantId}
+       AND t.owner_user_id = #{userId}
+    <if test="approvalCode != null and approvalCode != ''">
+       AND t.approval_code = #{approvalCode}
+    </if>
+       AND t.active_yn = TRUE
+     ORDER BY t.default_yn DESC, t.updated_at DESC, t.template_id DESC
+  </select>
+
+  <resultMap id="StepRowMap" type="com.example.commonsystem.approval.dto.ApprovalLineTemplateDtos$StepRow">
+    <constructor>
+      <idArg column="step_id" javaType="java.lang.Long"/>
+      <arg column="step_order" javaType="int"/>
+      <arg column="step_name" javaType="String"/>
+      <arg column="approval_type" javaType="String"/>
+      <arg column="target_department_type" javaType="String"/>
+      <arg column="target_department_id" javaType="java.lang.Long"/>
+      <arg column="target_department_name" javaType="String"/>
+      <arg column="target_role_key" javaType="String"/>
+      <arg column="target_user_id" javaType="java.lang.Long"/>
+      <arg column="target_user_name" javaType="String"/>
+      <arg column="group_approval_yn" javaType="boolean"/>
+      <arg column="required_yn" javaType="boolean"/>
+    </constructor>
+  </resultMap>
+
+  <resultMap id="TemplateDetailMap" type="com.example.commonsystem.approval.dto.ApprovalLineTemplateDtos$TemplateDetail">
+    <id property="templateId" column="template_id"/>
+    <result property="tenantId" column="tenant_id"/>
+    <result property="ownerUserId" column="owner_user_id"/>
+    <result property="approvalCode" column="approval_code"/>
+    <result property="templateName" column="template_name"/>
+    <result property="defaultYn" column="default_yn"/>
+    <result property="activeYn" column="active_yn"/>
+    <collection property="steps" ofType="com.example.commonsystem.approval.dto.ApprovalLineTemplateDtos$StepRow"
+                column="template_id" select="findSteps"/>
+  </resultMap>
+
+  <select id="findDetail" resultMap="TemplateDetailMap">
+    SELECT t.template_id, t.tenant_id, t.owner_user_id, t.approval_code,
+           t.template_name, t.default_yn, t.active_yn
+      FROM approval_line_template t
+     WHERE t.template_id = #{templateId}
+       AND t.tenant_id = #{tenantId}
+       AND t.owner_user_id = #{userId}
+     LIMIT 1
+  </select>
+
+  <select id="findDefault" resultMap="TemplateDetailMap">
+    SELECT t.template_id, t.tenant_id, t.owner_user_id, t.approval_code,
+           t.template_name, t.default_yn, t.active_yn
+      FROM approval_line_template t
+     WHERE t.tenant_id = #{tenantId}
+       AND t.owner_user_id = #{userId}
+       AND t.approval_code = #{approvalCode}
+       AND t.default_yn = TRUE
+       AND t.active_yn = TRUE
+     LIMIT 1
+  </select>
+
+  <select id="findSteps" resultMap="StepRowMap">
+    SELECT s.step_id, s.step_order, s.step_name, s.approval_type,
+           s.target_department_type, s.target_department_id,
+           o.name AS target_department_name,
+           s.target_role_key,
+           s.target_user_id,
+           u.name AS target_user_name,
+           s.group_approval_yn, s.required_yn
+      FROM approval_line_template_step s
+      LEFT JOIN orgs o ON o.org_id = s.target_department_id
+      LEFT JOIN users u ON u.user_id = s.target_user_id
+     WHERE s.template_id = #{templateId}
+     ORDER BY s.step_order
+  </select>
+
+  <insert id="insertTemplate">
+    INSERT INTO approval_line_template (
+      tenant_id, approval_code, owner_user_id, template_name, default_yn
+    ) VALUES (
+      #{tenantId}, #{approvalCode}, #{userId}, #{templateName}, #{defaultYn}
+    )
+  </insert>
+
+  <select id="currvalTemplateId" resultType="long">
+    SELECT currval(pg_get_serial_sequence('approval_line_template','template_id'))
+  </select>
+
+  <insert id="insertStep">
+    INSERT INTO approval_line_template_step (
+      template_id, step_order, step_name, approval_type,
+      target_department_type, target_department_id, target_role_key,
+      target_user_id,
+      group_approval_yn, required_yn
+    ) VALUES (
+      #{templateId}, #{s.stepOrder}, #{s.stepName},
+      COALESCE(#{s.approvalType}, 'APPROVE'),
+      #{s.targetDepartmentType}, #{s.targetDepartmentId}, #{s.targetRoleKey},
+      #{s.targetUserId},
+      COALESCE(#{s.groupApprovalYn}, TRUE),
+      COALESCE(#{s.requiredYn}, TRUE)
+    )
+  </insert>
+
+  <update id="updateTemplate">
+    UPDATE approval_line_template
+       SET template_name = #{templateName},
+           default_yn = #{defaultYn},
+           active_yn = #{activeYn},
+           updated_at = NOW()
+     WHERE template_id = #{templateId}
+       AND tenant_id = #{tenantId}
+       AND owner_user_id = #{userId}
+  </update>
+
+  <delete id="deleteTemplate">
+    DELETE FROM approval_line_template
+     WHERE template_id = #{templateId}
+       AND tenant_id = #{tenantId}
+       AND owner_user_id = #{userId}
+  </delete>
+
+  <delete id="deleteStepsByTemplate">
+    DELETE FROM approval_line_template_step WHERE template_id = #{templateId}
+  </delete>
+
+  <update id="unsetDefault">
+    UPDATE approval_line_template
+       SET default_yn = FALSE
+     WHERE tenant_id = #{tenantId}
+       AND owner_user_id = #{userId}
+       AND approval_code = #{approvalCode}
+       AND default_yn = TRUE
+  </update>
+
+</mapper>
