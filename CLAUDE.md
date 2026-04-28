@@ -159,7 +159,35 @@ public class XxxController {
 
 ### DB 마이그레이션 (Flyway)
 
-V1~V16. 새 마이그레이션 추가 시 `V{N+1}__설명.sql`. 스키마: `testdb`.
+스키마: `testdb`.
+
+#### ⚠️ 새 마이그레이션 작성 절차 (필수 — 충돌 방지)
+
+여러 PC/브랜치에서 동시 작업 시 **버전 번호 충돌**이 빈발한다. 다음 순서를 반드시 지킬 것:
+
+1. **`git pull` 먼저 실행** — 다른 작업자가 추가한 마이그레이션을 받아온다.
+2. **현재 최대 버전 확인**:
+   ```bash
+   ls src/main/resources/db/migration/ | sort -V | tail -5
+   ```
+3. 다음 번호로 파일 생성: `V{최대값+1}__{lowercase_snake_설명}.sql`
+4. **저장 후 검증 스크립트 실행** — 작업 완료 후 반드시:
+   ```bash
+   bash scripts/check-migration.sh
+   ```
+   `Duplicate version` 에러가 나오면 즉시 다음 번호로 rename. 절대 무시하고 push 금지.
+5. **충돌 발생 시 (Flyway 기동 실패 또는 push 후 충돌 인지)**:
+   - 새로 작성한 파일을 `git mv`로 다음 빈 번호로 rename
+   - `build/resources/main/db/migration/` stale 파일도 삭제 (`./gradlew clean` 또는 직접 rm)
+   - `[FIX] 마이그레이션 버전 충돌 해결` 커밋
+
+#### 마이그레이션 작성 규칙
+
+- 파일명: `V{N}__{lowercase_snake}.sql` (대문자 V, 더블 언더스코어, 소문자+언더스코어 설명)
+- `SET search_path TO testdb;`로 시작
+- `CREATE TABLE IF NOT EXISTS`, `INSERT ... ON CONFLICT DO NOTHING` 으로 멱등성 보장
+- `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` 사용 (Postgres 9.6+)
+- **이미 적용된 마이그레이션은 절대 수정 금지** — 항상 새 버전 추가
 
 ### Redis 키 규칙
 
@@ -175,6 +203,8 @@ V1~V16. 새 마이그레이션 추가 시 `V{N+1}__설명.sql`. 스키마: `test
 
 1. 패키지 생성: `com.example.commonsystem.{domain}/controller/`, `service/`, `mapper/`
 2. 마이그레이션: `src/main/resources/db/migration/V{N}__xxx.sql` (테이블 생성)
+   → **`git pull` + `ls db/migration | sort -V | tail` 로 최대 버전 확인 후 +1**
+   → 작업 완료 후 `bash scripts/check-migration.sh` 필수
 3. Mapper XML: `src/main/resources/mappers/{domain}/XxxMapper.xml`
 4. 응답: `ApiResponse.ok()` / `PageResponse` 사용
 5. 테넌트: `TenantContextHolder`로 tenantId 처리
