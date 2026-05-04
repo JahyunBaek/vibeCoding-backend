@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.commonsystem.workflow.mapper.WorkflowMapper">
+
+  <!-- ============ 상태 ============ -->
+  <select id="findAllStates" resultType="com.example.commonsystem.workflow.dto.WorkflowDtos$StateRow">
+    SELECT state_code   AS stateCode,
+           state_name   AS stateName,
+           state_type   AS stateType,
+           color,
+           description,
+           sort_order   AS sortOrder
+      FROM workflow_states
+     ORDER BY sort_order, state_code
+  </select>
+
+  <!-- ============ 워크플로우 정의 ============ -->
+  <resultMap id="WorkflowListRowMap"
+             type="com.example.commonsystem.workflow.dto.WorkflowDtos$WorkflowListRow">
+    <id property="workflowId" column="workflow_id"/>
+    <result property="tenantId" column="tenant_id"/>
+    <result property="workflowCode" column="workflow_code"/>
+    <result property="workflowName" column="workflow_name"/>
+    <result property="description" column="description"/>
+    <result property="entityType" column="entity_type"/>
+    <result property="initialStateCode" column="initial_state_code"/>
+    <result property="activeYn" column="active_yn"/>
+    <result property="isTemplate" column="is_template"/>
+    <result property="parentWorkflowId" column="parent_workflow_id"/>
+    <result property="templateVersion" column="template_version"/>
+    <result property="transitionCount" column="transition_count"/>
+    <result property="instanceCount" column="instance_count"/>
+    <result property="createdAt" column="created_at"/>
+    <result property="updatedAt" column="updated_at"/>
+  </resultMap>
+
+  <sql id="workflowSelectColumns">
+    w.workflow_id, w.tenant_id, w.workflow_code, w.workflow_name, w.description,
+    w.entity_type, w.initial_state_code, w.active_yn, w.is_template,
+    w.parent_workflow_id, w.template_version, w.created_at, w.updated_at,
+    (SELECT COUNT(*) FROM workflow_transitions tr WHERE tr.workflow_id = w.workflow_id)::int AS transition_count,
+    (SELECT COUNT(*) FROM workflow_instances i WHERE i.workflow_id = w.workflow_id)::int AS instance_count
+  </sql>
+
+  <select id="findTemplates" resultMap="WorkflowListRowMap">
+    SELECT <include refid="workflowSelectColumns"/>
+      FROM workflow_definitions w
+     WHERE w.tenant_id IS NULL
+       AND w.is_template = TRUE
+     ORDER BY w.entity_type, w.workflow_code
+  </select>
+
+  <select id="findByTenant" resultMap="WorkflowListRowMap">
+    SELECT <include refid="workflowSelectColumns"/>
+      FROM workflow_definitions w
+     WHERE w.tenant_id = #{tenantId}
+    <if test="entityType != null and entityType != ''">
+       AND w.entity_type = #{entityType}
+    </if>
+    <if test="activeOnly">
+       AND w.active_yn = TRUE
+    </if>
+     ORDER BY w.entity_type, w.workflow_code
+  </select>
+
+  <resultMap id="WorkflowDetailMap"
+             type="com.example.commonsystem.workflow.dto.WorkflowDtos$WorkflowDetail">
+    <id property="workflowId" column="workflow_id"/>
+    <result property="tenantId" column="tenant_id"/>
+    <result property="workflowCode" column="workflow_code"/>
+    <result property="workflowName" column="workflow_name"/>
+    <result property="description" column="description"/>
+    <result property="entityType" column="entity_type"/>
+    <result property="initialStateCode" column="initial_state_code"/>
+    <result property="activeYn" column="active_yn"/>
+    <result property="isTemplate" column="is_template"/>
+    <result property="parentWorkflowId" column="parent_workflow_id"/>
+    <result property="templateVersion" column="template_version"/>
+  </resultMap>
+
+  <select id="findDefinitionById" resultMap="WorkflowDetailMap">
+    SELECT workflow_id, tenant_id, workflow_code, workflow_name, description,
+           entity_type, initial_state_code, active_yn, is_template,
+           parent_workflow_id, template_version
+      FROM workflow_definitions
+     WHERE workflow_id = #{workflowId}
+    <if test="tenantId != null">
+       AND (tenant_id = #{tenantId} OR tenant_id IS NULL)
+    </if>
+  </select>
+
+  <select id="findDefinitionByCode" resultMap="WorkflowDetailMap">
+    SELECT workflow_id, tenant_id, workflow_code, workflow_name, description,
+           entity_type, initial_state_code, active_yn, is_template,
+           parent_workflow_id, template_version
+      FROM workflow_definitions
+     WHERE workflow_code = #{workflowCode}
+    <if test="tenantId != null">
+       AND tenant_id = #{tenantId}
+    </if>
+    <if test="tenantId == null">
+       AND tenant_id IS NULL
+    </if>
+     LIMIT 1
+  </select>
+
+  <insert id="insertDefinition" useGeneratedKeys="true" keyProperty="workflowId" keyColumn="workflow_id">
+    INSERT INTO workflow_definitions
+      (tenant_id, workflow_code, workflow_name, description, entity_type,
+       initial_state_code, is_template, parent_workflow_id, template_version,
+       active_yn, created_by)
+    VALUES
+      (#{tenantId}, #{workflowCode}, #{workflowName}, #{description}, #{entityType},
+       #{initialStateCode}, #{isTemplate}, #{parentWorkflowId}, #{templateVersion},
+       #{activeYn}, #{createdBy})
+    RETURNING workflow_id
+  </insert>
+
+  <update id="updateDefinition">
+    UPDATE workflow_definitions
+       SET workflow_name = #{workflowName},
+           description = #{description},
+           initial_state_code = #{initialStateCode},
+           active_yn = #{activeYn},
+           updated_at = NOW()
+     WHERE workflow_id = #{workflowId}
+    <if test="tenantId != null"> AND (tenant_id = #{tenantId} OR tenant_id IS NULL)</if>
+  </update>
+
+  <delete id="deleteDefinition">
+    DELETE FROM workflow_definitions
+     WHERE workflow_id = #{workflowId}
+    <if test="tenantId != null"> AND (tenant_id = #{tenantId} OR tenant_id IS NULL)</if>
+  </delete>
+
+  <!-- ============ 전이 ============ -->
+  <resultMap id="TransitionRowMap"
+             type="com.example.commonsystem.workflow.dto.WorkflowDtos$TransitionRow">
+    <id property="transitionId" column="transition_id"/>
+    <result property="actionCode" column="action_code"/>
+    <result property="actionName" column="action_name"/>
+    <result property="fromStateCode" column="from_state_code"/>
+    <result property="toStateCode" column="to_state_code"/>
+    <result property="buttonColor" column="button_color"/>
+    <result property="buttonIcon" column="button_icon"/>
+    <result property="commentRequired" column="comment_required"/>
+    <result property="autoSkip" column="auto_skip"/>
+    <result property="sortOrder" column="sort_order"/>
+    <result property="activeYn" column="active_yn"/>
+  </resultMap>
+
+  <select id="findTransitionsByWorkflow" resultMap="TransitionRowMap">
+    SELECT * FROM workflow_transitions
+     WHERE workflow_id = #{workflowId}
+     ORDER BY sort_order, transition_id
+  </select>
+
+  <select id="findTransitionById" resultMap="TransitionRowMap">
+    SELECT * FROM workflow_transitions WHERE transition_id = #{transitionId}
+  </select>
+
+  <insert id="insertTransition" useGeneratedKeys="true" keyProperty="transitionId" keyColumn="transition_id">
+    INSERT INTO workflow_transitions
+      (workflow_id, action_code, action_name, from_state_code, to_state_code,
+       button_color, button_icon, comment_required, auto_skip, sort_order, active_yn)
+    VALUES
+      (#{workflowId}, #{actionCode}, #{actionName}, #{fromStateCode}, #{toStateCode},
+       COALESCE(#{buttonColor}, 'default'), #{buttonIcon},
+       #{commentRequired}, #{autoSkip}, #{sortOrder}, #{activeYn})
+    RETURNING transition_id
+  </insert>
+
+  <delete id="deleteTransitionsByWorkflow">
+    DELETE FROM workflow_transitions WHERE workflow_id = #{workflowId}
+  </delete>
+
+  <!-- ============ 조건 / Post-Action ============ -->
+  <select id="findConditionsByTransition"
+          resultType="com.example.commonsystem.workflow.dto.WorkflowDtos$ConditionRow">
+    SELECT condition_id  AS conditionId,
+           condition_type AS conditionType,
+           role_key       AS roleKey,
+           dept_id        AS deptId,
+           user_id        AS userId
+      FROM workflow_transition_conditions
+     WHERE transition_id = #{transitionId}
+     ORDER BY sort_order, condition_id
+  </select>
+
+  <select id="findPostActionsByTransition"
+          resultType="com.example.commonsystem.workflow.dto.WorkflowDtos$PostActionRow">
+    SELECT post_action_id  AS postActionId,
+           action_type     AS actionType,
+           approval_code   AS approvalCode,
+           notify_target   AS notifyTarget,
+           notify_template AS notifyTemplate,
+           field_path      AS fieldPath,
+           field_value     AS fieldValue
+      FROM workflow_transition_post_actions
+     WHERE transition_id = #{transitionId}
+     ORDER BY sort_order, post_action_id
+  </select>
+
+  <insert id="insertCondition">
+    INSERT INTO workflow_transition_conditions
+      (transition_id, condition_type, role_key, dept_id, user_id, sort_order)
+    VALUES
+      (#{transitionId}, #{c.conditionType}, #{c.roleKey}, #{c.deptId}, #{c.userId}, #{sortOrder})
+  </insert>
+
+  <insert id="insertPostAction">
+    INSERT INTO workflow_transition_post_actions
+      (transition_id, action_type, approval_code, notify_target, notify_template,
+       field_path, field_value, sort_order)
+    VALUES
+      (#{transitionId}, #{p.actionType}, #{p.approvalCode}, #{p.notifyTarget},
+       #{p.notifyTemplate}, #{p.fieldPath}, #{p.fieldValue}, #{sortOrder})
+  </insert>
+
+  <!-- ============ 인스턴스 ============ -->
+  <insert id="insertInstance" useGeneratedKeys="true" keyProperty="instanceId" keyColumn="instance_id">
+    INSERT INTO workflow_instances
+      (tenant_id, workflow_id, entity_type, entity_id,
+       current_state_code, status, requester_user_id, assignee_user_id)
+    VALUES
+      (#{tenantId}, #{workflowId}, #{entityType}, #{entityId},
+       #{currentStateCode}, 'ACTIVE', #{requesterUserId}, #{assigneeUserId})
+    RETURNING instance_id
+  </insert>
+
+  <select id="findInstanceByEntity" resultType="map">
+    SELECT i.instance_id     AS "instanceId",
+           i.tenant_id       AS "tenantId",
+           i.workflow_id     AS "workflowId",
+           w.workflow_code   AS "workflowCode",
+           w.workflow_name   AS "workflowName",
+           i.entity_type     AS "entityType",
+           i.entity_id       AS "entityId",
+           i.current_state_code AS "currentStateCode",
+           s.state_name      AS "currentStateName",
+           s.color           AS "currentStateColor",
+           i.status,
+           i.requester_user_id AS "requesterUserId",
+           u1.name           AS "requesterName",
+           i.assignee_user_id AS "assigneeUserId",
+           u2.name           AS "assigneeName",
+           i.approval_document_id AS "approvalDocumentId",
+           i.pending_transition_id AS "pendingTransitionId",
+           i.created_at      AS "createdAt",
+           i.updated_at      AS "updatedAt"
+      FROM workflow_instances i
+      JOIN workflow_definitions w ON w.workflow_id = i.workflow_id
+      JOIN workflow_states s ON s.state_code = i.current_state_code
+      LEFT JOIN users u1 ON u1.user_id = i.requester_user_id
+      LEFT JOIN users u2 ON u2.user_id = i.assignee_user_id
+     WHERE i.entity_type = #{entityType}
+       AND i.entity_id = #{entityId}
+    <if test="tenantId != null"> AND i.tenant_id = #{tenantId}</if>
+     LIMIT 1
+  </select>
+
+  <select id="findInstanceById" resultType="map">
+    SELECT i.instance_id     AS "instanceId",
+           i.tenant_id       AS "tenantId",
+           i.workflow_id     AS "workflowId",
+           w.workflow_code   AS "workflowCode",
+           w.workflow_name   AS "workflowName",
+           i.entity_type     AS "entityType",
+           i.entity_id       AS "entityId",
+           i.current_state_code AS "currentStateCode",
+           s.state_name      AS "currentStateName",
+           s.color           AS "currentStateColor",
+           i.status,
+           i.requester_user_id AS "requesterUserId",
+           u1.name           AS "requesterName",
+           i.assignee_user_id AS "assigneeUserId",
+           u2.name           AS "assigneeName",
+           i.approval_document_id AS "approvalDocumentId",
+           i.pending_transition_id AS "pendingTransitionId",
+           i.created_at      AS "createdAt",
+           i.updated_at      AS "updatedAt"
+      FROM workflow_instances i
+      JOIN workflow_definitions w ON w.workflow_id = i.workflow_id
+      JOIN workflow_states s ON s.state_code = i.current_state_code
+      LEFT JOIN users u1 ON u1.user_id = i.requester_user_id
+      LEFT JOIN users u2 ON u2.user_id = i.assignee_user_id
+     WHERE i.instance_id = #{instanceId}
+    <if test="tenantId != null"> AND i.tenant_id = #{tenantId}</if>
+  </select>
+
+  <update id="updateInstanceState">
+    UPDATE workflow_instances
+       SET current_state_code = #{currentStateCode},
+           status = #{status},
+           updated_at = NOW()
+     WHERE instance_id = #{instanceId}
+  </update>
+
+  <update id="updateInstanceAssignee">
+    UPDATE workflow_instances
+       SET assignee_user_id = #{assigneeUserId},
+           updated_at = NOW()
+     WHERE instance_id = #{instanceId}
+  </update>
+
+  <update id="updateInstanceApproval">
+    UPDATE workflow_instances
+       SET approval_document_id = #{approvalDocumentId},
+           pending_transition_id = #{pendingTransitionId},
+           status = #{status},
+           updated_at = NOW()
+     WHERE instance_id = #{instanceId}
+  </update>
+
+  <insert id="insertHistory">
+    INSERT INTO workflow_history
+      (instance_id, transition_id, action_code, from_state_code, to_state_code,
+       actor_user_id, comment, meta)
+    VALUES
+      (#{instanceId}, #{transitionId}, #{actionCode}, #{fromStateCode}, #{toStateCode},
+       #{actorUserId}, #{comment},
+       <choose>
+         <when test="meta != null">CAST(#{meta} AS JSONB)</when>
+         <otherwise>NULL</otherwise>
+       </choose>)
+  </insert>
+
+  <select id="findHistory" resultType="map">
+    SELECT h.history_id      AS "historyId",
+           h.action_code     AS "actionCode",
+           h.from_state_code AS "fromStateCode",
+           h.to_state_code   AS "toStateCode",
+           h.actor_user_id   AS "actorUserId",
+           u.name            AS "actorName",
+           h.comment,
+           h.created_at      AS "createdAt"
+      FROM workflow_history h
+      LEFT JOIN users u ON u.user_id = h.actor_user_id
+     WHERE h.instance_id = #{instanceId}
+     ORDER BY h.created_at DESC, h.history_id DESC
+  </select>
+
+</mapper>

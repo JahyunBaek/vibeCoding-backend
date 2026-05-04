@@ -243,6 +243,142 @@ bash scripts/check-migration.sh
 6. 권한: `@RequiresAction` 필요 시 적용
 7. Swagger: `@Tag`, `@Operation` 적용
 8. 프론트: `src/lib/api/{domain}.ts` + `index.ts` 등록
+9. **워크플로우 적용**: 도메인이 상태 머신을 가지는 경우 → 자체 status 컬럼/enum 만들지 말고 **공통 워크플로우 시스템 사용** (아래 참조)
+
+## 워크플로우 시스템 (필독)
+
+### 언제 사용?
+
+**상태가 5개 이상이거나, 전이마다 권한/결재/알림이 다르면 반드시 공통 워크플로우 사용.**
+도메인 서비스에서 자체 상태 머신을 짜지 말 것.
+
+| 시나리오 | 워크플로우 사용? |
+|---------|---------------|
+| 단순 use_yn / active/inactive | ❌ 불필요 (boolean) |
+| 게시글 published/draft 2단계 | ❌ 불필요 |
+| 인시던트 5단계 (NEW → ASSIGNED → IN_PROGRESS → RESOLVED → CLOSED) | ✅ 필수 |
+| 요구사항 8단계 + 결재 | ✅ 필수 |
+| 휴가 신청 + 결재 통합 | ✅ 필수 |
+
+### 핵심 모델
+
+```
+workflow_states (글로벌 풀, 코드 안정)
+  ↓
+workflow_definitions
+  ├─ tenant_id IS NULL: 시스템 템플릿 (SUPER_ADMIN 관리)
+  └─ tenant_id = N:    테넌트 사본 (ADMIN 정책 변경)
+  ↓
+workflow_transitions ← Conditions (권한) + Post Functions (결재/알림)
+  ↓
+workflow_instances (도메인 엔티티 1개당 1개)
+  ↓
+workflow_history (모든 상태 변경 이력)
+```
+
+### 권한 분리
+
+| 역할 | 가능한 작업 |
+|------|-----------|
+| **SUPER_ADMIN** | 시스템 템플릿 작성/수정, 글로벌 상태 풀 관리 |
+| **ADMIN** | 시스템 템플릿을 자기 테넌트로 복사, 테넌트 정책(권한/결재/알림/스킵) 변경 |
+| **USER** | 인스턴스 상태 전이 (transition별 conditions로 권한 검사) |
+
+**커스텀 깊이**: 테넌트는 정책만 변경 가능 (구조 변경 ❌). 상태 코드/액션 코드는 시스템 고정 — 도메인 코드가 참조하기 때문.
+
+### 새 도메인에 워크플로우 적용 절차
+
+#### 1단계: 시스템 템플릿 정의 (V{N}__xxx_workflow.sql)
+
+```sql
+INSERT INTO workflow_definitions
+  (tenant_id, workflow_code, workflow_name, entity_type, initial_state_code, is_template, template_version)
+VALUES
+  (NULL, 'PMS_REQUIREMENT', '요구사항 워크플로우', 'Requirement', 'DRAFT', TRUE, 1);
+
+-- transitions, conditions, post_actions 시드 (V20 시드 참조)
+```
+
+상태 코드는 `workflow_states` 글로벌 풀에 있는 것만 사용. 새 상태가 필요하면 풀에 추가.
+
+#### 2단계: 도메인 서비스에서 WorkflowEngine 주입
+
+```java
+@Service
+@RequiredArgsConstructor
+public class RequirementService {
+    private final RequirementMapper mapper;
+    private final WorkflowEngine workflow;
+
+    @Transactional
+    public long create(CreateRequirementRequest req, UserPrincipal user) {
+        long reqId = mapper.insert(...);
+        // 도메인 엔티티에 status 컬럼을 두지 않음 — workflow_instances 가 진실
+        workflow.startInstance(new StartInstanceRequest(
+            "PMS_REQUIREMENT",  // workflow_code (시스템 템플릿 코드)
+            "Requirement",      // entity_type
+            reqId,
+            user.getUserId(),   // requester
+            null                // assignee
+        ));
+        return reqId;
+    }
+
+    public void submit(long reqId, String comment, UserPrincipal user) {
+        workflow.transition("Requirement", reqId, "SUBMIT", comment, null, user);
+        // 자동 처리: 권한 검사 → 상태 변경 → 결재 시작 → 알림 발송 → 이력 기록
+    }
+}
+```
+
+#### 3단계: 도메인 컨트롤러는 비즈니스 데이터만 책임
+
+```java
+@GetMapping("/{id}")
+public ApiResponse<RequirementDetail> detail(@PathVariable long id) {
+    // 도메인 데이터만 반환 — 상태/이력/액션은 별도 API 로
+    return ApiResponse.ok(service.detail(id));
+}
+```
+
+상태 표시는 프론트엔드에서 `GET /api/workflow/{entityType}/{entityId}` 별도 호출.
+
+#### 4단계: 프론트엔드 — 동적 액션 버튼
+
+```tsx
+import WorkflowActions from "@/components/workflow/WorkflowActions";
+
+<RequirementDetail data={req} />
+<WorkflowActions
+  entityType="Requirement"
+  entityId={req.id}
+  onTransition={() => refetch()}
+/>
+```
+
+`WorkflowActions` 컴포넌트는 백엔드에서 받은 `availableActions` 배열을 그대로 버튼으로 렌더링. 도메인 코드가 버튼/권한 처리에 관여하지 않음.
+
+### 결재 연동
+
+`workflow_transition_post_actions.action_type = 'REQUIRE_APPROVAL'` 인 전이가 호출되면:
+
+1. 인스턴스가 `PENDING_APPROVAL` 상태로 전환 (current_state_code 는 변경 안 됨)
+2. `pending_transition_id` 보관
+3. 도메인은 결재 시스템(`approval_code` 사용)으로 결재 문서 발행
+4. 결재 완료 시 `WorkflowEngine.onApprovalCompleted(instanceId, approved, ...)` 호출 → 자동 전이
+
+도메인 서비스가 결재 발행 + 결재 완료 hook 호출을 담당. 워크플로우는 상태 관리만.
+
+### 화면-액션 매핑 (`@RequiresAction` 과의 관계)
+
+- **`@RequiresAction`**: 화면 진입/페이지 단위 권한 (메뉴 보이기 등)
+- **워크플로우 conditions**: 특정 액션(전이) 단위 권한
+- 중첩 가능 — 페이지 진입은 ADMIN만, 페이지 안에서 액션은 conditions 로 세분화
+
+### 시스템 템플릿 변경 시
+
+SUPER_ADMIN 이 시스템 템플릿을 수정해도 **이미 복사된 테넌트 워크플로우는 자동 갱신되지 않음** (Copy-on-Customize 모델).
+필요 시 `template_version` 비교 후 ADMIN 이 "템플릿 최신 버전 반영" 메뉴로 수동 갱신 (Phase 2).
 
 ## 브랜치 전략
 
